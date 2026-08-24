@@ -9,6 +9,7 @@ button:focus-visible { outline: 1px solid #ead4b7; outline-offset: 4px; }
 .museum-shell { width: 100vw; height: 100dvh; background: #100c0e; position: relative; overflow: hidden; }
 .museum-shell::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 3; background: radial-gradient(circle at 50% 40%, transparent 38%, rgba(0,0,0,.36) 100%); }
 .museum-shell canvas { position: absolute; inset: 0; z-index: 1; }
+.museum-shell.low-power::after { background: radial-gradient(circle at 50% 40%, transparent 42%, rgba(0,0,0,.46) 100%); }
 
 .museum-loading { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 10px; z-index: 1; background: #100c0e; }
 .museum-loading span { font: 8px 'DM Mono', monospace; letter-spacing: .2em; color: #85817c; }
@@ -68,6 +69,7 @@ button:focus-visible { outline: 1px solid #ead4b7; outline-offset: 4px; }
 .museum-timeline { position: absolute; z-index: 14; left: 50%; transform: translateX(-50%); bottom: 22px; width: min(700px, calc(100vw - 120px)); height: 64px; display: grid; grid-template-columns: 38px 1fr 38px; align-items: center; gap: 12px; }
 .museum-timeline > button { width: 34px; height: 34px; border: 1px solid #3b3034; border-radius: 50%; background: rgba(30,20,24,.68); display: grid; place-items: center; cursor: pointer; }
 .museum-timeline > button:disabled { opacity: .25; }
+.museum-timeline > button:focus-visible, .timeline-line > button:focus-visible { outline: 1px solid #ead4b7; outline-offset: 3px; }
 .timeline-center { align-self: stretch; display: grid; align-content: center; }
 .timeline-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font: 6px 'DM Mono', monospace; color: #5f6368; letter-spacing: .1em; }
 .timeline-meta b { font-weight: 400; color: #918a84; }

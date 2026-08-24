@@ -14,7 +14,19 @@ Memory Museum is intentionally dreamlike and cinematic: full-screen spatial navi
 - `Ask the Archive` moves to the pivotal memory and streams an AI curator interpretation.
 - Selecting an exhibit opens a material/page-style reveal with emotional weight and provenance.
 - Timeline scrubber moves through the project arc.
+- Arrow keys provide guided exhibit navigation and Escape returns to the room.
 - Mobile and WebGL-disabled environments use a purpose-built 2D gallery fallback.
+- Low-power devices reduce DPR, particles and postprocessing; hidden tabs suspend the WebGL frameloop.
+
+## Visual reference adoption
+
+The required catalog is preserved verbatim at [`docs/visual-reference-catalog.md`](docs/visual-reference-catalog.md). Reference investigation, local comparisons, license verification and adoption decisions are documented in [`docs/reference-adoption.md`](docs/reference-adoption.md).
+
+### Latest captures
+
+![AI Memory Museum desktop](./public/preview.png)
+
+![AI Memory Museum mobile](./public/preview-mobile.png)
 
 ## Run locally
 

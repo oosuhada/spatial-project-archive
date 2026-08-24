@@ -35,3 +35,27 @@ AI Memory Museum uses open-source rendering primitives and original product-spec
 - Repository: https://github.com/lucide-icons/lucide
 - License: ISC
 - Use: minimal navigation and artifact glyphs.
+
+## Bruno Simon Folio 2019
+- Repository: https://github.com/brunosimon/folio-2019
+- Author: Bruno Simon
+- License: MIT
+- Use: spatial-navigation principle reference only; no Folio source code is included.
+
+## react-gallery-3d
+- Repository: https://github.com/isoteriksoftware/react-gallery-3d
+- Authors: repository contributors
+- License: MIT
+- Use: gallery-scaffolding and approach-label behavior comparison only. The production scene remains custom R3F code.
+
+## r3f-scroll-rig
+- Repository: https://github.com/14islands/r3f-scroll-rig
+- Steward: 14islands contributors
+- License: repository LICENSE verified as MIT during source review; current npm metadata was also checked and reported ISC
+- Use: DOM/WebGL continuity reference only; package is not installed.
+
+## HTML in Canvas
+- Repository: https://github.com/en-dash-consulting/html-in-canvas-dot-dev
+- Authors: repository contributors
+- License: MIT
+- Use: material/page reveal visual reference only; no source code is copied.

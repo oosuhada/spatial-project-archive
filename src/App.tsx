@@ -54,7 +54,7 @@ function arrangeArtifacts(mode: SortMode): PositionedArtifact[] {
   });
 }
 
-function ArtifactObject({ artifact, selected, onSelect, reduced }: { artifact: PositionedArtifact; selected: boolean; onSelect: (artifact: Artifact) => void; reduced: boolean }) {
+function ArtifactObject({ artifact, selected, onSelect, reduced, lowPower }: { artifact: PositionedArtifact; selected: boolean; onSelect: (artifact: Artifact) => void; reduced: boolean; lowPower: boolean }) {
   const [hovered, setHovered] = useState(false);
   const scale = artifact.kind === 'screen' ? [1.65, 1.05, .08] as Vector3Tuple : artifact.kind === 'wireframe' ? [1.35, 1.75, .08] as Vector3Tuple : [1.28, 1.55, .07] as Vector3Tuple;
 
@@ -95,12 +95,12 @@ function ArtifactObject({ artifact, selected, onSelect, reduced }: { artifact: P
           </div>
         </Html>
       ) : null}
-      {!reduced && selected ? <Sparkles count={14} scale={[2.2, 2.2, 1.5]} size={1.4} speed={.18} color={artifact.accent} opacity={.5} /> : null}
+      {!reduced && !lowPower && selected ? <Sparkles count={14} scale={[2.2, 2.2, 1.5]} size={1.4} speed={.18} color={artifact.accent} opacity={.5} /> : null}
     </group>
   );
 }
 
-function MemoryScene({ artifacts, selectedId, onSelect, reduced }: { artifacts: PositionedArtifact[]; selectedId: number | null; onSelect: (artifact: Artifact) => void; reduced: boolean }) {
+function MemoryScene({ artifacts, selectedId, onSelect, reduced, lowPower, active }: { artifacts: PositionedArtifact[]; selectedId: number | null; onSelect: (artifact: Artifact) => void; reduced: boolean; lowPower: boolean; active: boolean }) {
   const controls = useRef<any>(null);
   const selected = artifacts.find((artifact) => artifact.id === selectedId) ?? null;
 
@@ -117,7 +117,7 @@ function MemoryScene({ artifacts, selectedId, onSelect, reduced }: { artifacts: 
   const threadPoints = useMemo(() => artifacts.map((artifact) => artifact.position), [artifacts]);
 
   return (
-    <Canvas camera={{ position: [0, 1.15, 9.2], fov: 46 }} dpr={[1, 1.45]} gl={{ antialias: true, alpha: false }}>
+    <Canvas camera={{ position: [0, 1.15, 9.2], fov: 46 }} dpr={lowPower ? [1, 1.08] : [1, 1.45]} frameloop={active ? 'always' : 'never'} gl={{ antialias: !lowPower, alpha: false }}>
       <color attach="background" args={['#090a0d']} />
       <fog attach="fog" args={['#090a0d', 7, 20]} />
       <ambientLight intensity={.14} />
@@ -127,17 +127,17 @@ function MemoryScene({ artifacts, selectedId, onSelect, reduced }: { artifacts: 
       <pointLight position={[0, -3, 2]} intensity={7} color="#bda2d7" />
 
       <group>
-        {artifacts.map((artifact) => <ArtifactObject key={artifact.id} artifact={artifact} selected={selectedId === artifact.id} onSelect={onSelect} reduced={reduced} />)}
+        {artifacts.map((artifact) => <ArtifactObject key={artifact.id} artifact={artifact} selected={selectedId === artifact.id} onSelect={onSelect} reduced={reduced} lowPower={lowPower} />)}
         {threadPoints.slice(0, -1).map((point, index) => (
           <Line key={`${index}-${artifacts[index + 1].id}`} points={[point, artifacts[index + 1].position]} color={artifacts[index].accent} lineWidth={.45} transparent opacity={.25} dashed={false} />
         ))}
       </group>
 
-      <Sparkles count={reduced ? 45 : 150} scale={[18, 9, 18]} size={.75} speed={reduced ? 0 : .08} opacity={.2} color="#e8e0d7" />
+      <Sparkles count={reduced || lowPower ? 34 : 150} scale={[18, 9, 18]} size={.75} speed={reduced || lowPower ? 0 : .08} opacity={lowPower ? .11 : .2} color="#e8e0d7" />
       <CameraControls ref={controls} smoothTime={reduced ? .01 : .55} minDistance={3.6} maxDistance={15} dollySpeed={.45} truckSpeed={.6} />
       <EffectComposer multisampling={0}>
-        <Bloom luminanceThreshold={.42} luminanceSmoothing={.9} intensity={.55} mipmapBlur />
-        <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={.17} />
+        <Bloom luminanceThreshold={.42} luminanceSmoothing={.9} intensity={lowPower ? .28 : .55} mipmapBlur={!lowPower} />
+        <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={lowPower ? .08 : .17} />
         <Vignette eskil={false} offset={.12} darkness={.92} />
       </EffectComposer>
     </Canvas>
@@ -173,6 +173,12 @@ function GalleryFallback({ artifacts, selectedId, onSelect }: { artifacts: Posit
 export function App() {
   const reduced = Boolean(useReducedMotion());
   const webgl = useMemo(() => supportsWebGL(), []);
+  const lowPower = useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    const device = navigator as Navigator & { deviceMemory?: number };
+    return (device.hardwareConcurrency > 0 && device.hardwareConcurrency <= 4) || Boolean(device.deviceMemory && device.deviceMemory <= 4);
+  }, []);
+  const [documentVisible, setDocumentVisible] = useState(() => typeof document === 'undefined' || document.visibilityState !== 'hidden');
   const [mode, setMode] = useState<SortMode>('time');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [galleryMode, setGalleryMode] = useState(() => !webgl || (typeof window !== 'undefined' && window.innerWidth < 560));
@@ -203,17 +209,36 @@ export function App() {
     setSelectedId(museumArtifacts[next].id);
   };
 
+  useEffect(() => {
+    const onVisibility = () => setDocumentVisible(document.visibilityState !== 'hidden');
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') stepTimeline(-1);
+      if (event.key === 'ArrowRight') stepTimeline(1);
+      if (event.key === 'Escape') {
+        setSelectedId(null);
+        setArchiveText('');
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
+
   return (
-    <main className="museum-shell">
+    <main className={`museum-shell ${lowPower ? 'low-power' : ''}`}>
       {!galleryMode && webgl ? (
         <Suspense fallback={<div className="museum-loading"><SparklesIcon size={20} /><span>OPENING THE ARCHIVE</span><i /></div>}>
-          <MemoryScene artifacts={artifacts} selectedId={selectedId} onSelect={selectArtifact} reduced={reduced} />
+          <MemoryScene artifacts={artifacts} selectedId={selectedId} onSelect={selectArtifact} reduced={reduced} lowPower={lowPower} active={documentVisible} />
         </Suspense>
       ) : <GalleryFallback artifacts={artifacts} selectedId={selectedId} onSelect={selectArtifact} />}
 
       <header className="museum-header">
         <div className="museum-brand"><Circle size={12} fill="currentColor" /><div><strong>MEMORY MUSEUM</strong><span>A SPATIAL ARCHIVE CURATED BY AI</span></div></div>
-        <div className="museum-room">ROOM 01 · PROJECT ORIGIN / RELEASE</div>
+        <div className="museum-room">ROOM 01 · PROJECT ORIGIN / RELEASE{lowPower ? ' · QUIET RENDER' : ''}</div>
         <button className="view-toggle" onClick={() => setGalleryMode((current) => !current)} disabled={!webgl}>{galleryMode ? <Move3d size={14} /> : <GalleryHorizontal size={14} />}{galleryMode ? 'ENTER SPACE' : '2D GALLERY'}</button>
       </header>
 
