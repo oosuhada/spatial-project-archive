@@ -4,7 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@9.15.4",
-  "scripts": { "dev": "vite --host 0.0.0.0 --port 3104 --strictPort", "build": "tsc --noEmit && vite build", "typecheck": "tsc --noEmit --pretty false", "lint": "eslint src --max-warnings 0" },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3104 --strictPort",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit --pretty false",
+    "lint": "eslint src --max-warnings 0",
+    "test:domain": "node --experimental-strip-types --experimental-specifier-resolution=node --test src/test/*.test.ts"
+  },
   "dependencies": {
     "@react-three/drei": "^9.120.5", "@react-three/fiber": "^8.17.10", "@react-three/postprocessing": "^2.19.1", "lucide-react": "^0.468.0", "motion": "^11.15.0", "postprocessing": "^6.36.6", "react": "^18.3.1", "react-dom": "^18.3.1", "three": "^0.171.0"
   },

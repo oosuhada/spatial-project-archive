@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+dist
+backend/.venv
+backend/data
+backend/.pytest_cache
+backend/**/__pycache__
+playwright-report
+test-results
+public/*.png
+public/*.gif
+*.log
+.DS_Store
