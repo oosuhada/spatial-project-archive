@@ -37,6 +37,7 @@ Create private archive
 - Artifact metadata including phase, emotion, people, tags, description, transcript, provenance, and privacy state.
 - Explicit separation between source material, AI interpretation, and human-authored interpretation.
 - Artifact relationships and source-preserving navigation.
+- Archive Index summarizing provenance coverage, processing failures, relationship isolation, content types, project phases, and artifacts that need attention.
 - Search and conventional 2D gallery mode.
 - Spatial R3F archive with stored positions, zones, sequence, camera stops, and lighting presets.
 - 2D floor-plan authoring for the same persisted spatial model.

@@ -6,6 +6,7 @@ import {
   Compass,
   GalleryHorizontal,
   Import,
+  LayoutList,
   Layers3,
   MessageCircleQuestion,
   Plus,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import { archiveApi } from '../api/client';
 import { ArchiveCreatePanel } from '../archives/ArchiveCreatePanel';
+import { ArchiveIndexPanel } from '../archives/ArchiveIndexPanel';
 import { SharePanel } from '../archives/SharePanel';
 import { useArchiveWorkspace } from '../archives/useArchiveWorkspace';
 import { ArtifactPanel } from '../artifacts/ArtifactPanel';
@@ -38,7 +40,7 @@ const MemoryScene = lazy(async () => {
   return { default: module.MemoryScene };
 });
 
-type Overlay = 'artifact' | 'import' | 'search' | 'curator' | 'editor' | 'share' | 'navigation' | 'archive' | null;
+type Overlay = 'artifact' | 'import' | 'search' | 'index' | 'curator' | 'editor' | 'share' | 'navigation' | 'archive' | null;
 
 export function AppShell() {
   const reduced = Boolean(useReducedMotion());
@@ -196,6 +198,7 @@ export function AppShell() {
   const overlayTitle = overlay === 'artifact' ? workspace.selected?.title ?? 'Artifact'
     : overlay === 'import' ? 'Import artifacts'
       : overlay === 'search' ? 'Search archive'
+        : overlay === 'index' ? 'Archive index'
         : overlay === 'curator' ? 'Ask the curator'
           : overlay === 'editor' ? 'Exhibition editor'
             : overlay === 'share' ? 'Share & export'
@@ -264,6 +267,7 @@ export function AppShell() {
         <nav className="archive-toolrail" aria-label="Archive tools">
           <button type="button" onClick={() => setOverlay('import')}><Import size={15} /><span>Import</span></button>
           <button type="button" onClick={() => setOverlay('search')}><Search size={15} /><span>Search</span></button>
+          <button type="button" onClick={() => setOverlay('index')}><LayoutList size={15} /><span>Index</span></button>
           <button type="button" onClick={() => { setMode('time'); setOverlay('editor'); }}><SlidersHorizontal size={15} /><span>Arrange</span></button>
           <button type="button" onClick={() => setOverlay('curator')}><MessageCircleQuestion size={15} /><span>Curator</span></button>
           <button type="button" onClick={() => setOverlay('share')}><Share2 size={15} /><span>Share</span></button>
@@ -323,6 +327,7 @@ export function AppShell() {
           ) : null}
           {overlay === 'import' && !workspace.readOnly ? <ImportPanel archiveId={snapshot.archive.id} onImported={async (artifact) => { await workspace.refresh(); selectArtifact(artifact.id); }} /> : null}
           {overlay === 'search' && !workspace.readOnly ? <SearchPanel archiveId={snapshot.archive.id} onOpenArtifact={(artifactId) => selectArtifact(artifactId)} /> : null}
+          {overlay === 'index' && !workspace.readOnly ? <ArchiveIndexPanel snapshot={snapshot} onOpenArtifact={(artifactId) => selectArtifact(artifactId)} /> : null}
           {overlay === 'curator' && !workspace.readOnly ? <CuratorPanel archiveId={snapshot.archive.id} artifacts={snapshot.artifacts} selectedArtifactId={workspace.selectedId} onOpenArtifact={(artifactId) => selectArtifact(artifactId)} /> : null}
           {overlay === 'editor' && !workspace.readOnly ? (
             <ExhibitionEditor
