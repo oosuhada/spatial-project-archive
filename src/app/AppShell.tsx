@@ -159,7 +159,7 @@ export function AppShell() {
   if (workspace.loading && !snapshot) {
     return (
       <main className="museum-shell loading-shell">
-        <div className="museum-loading"><Sparkles size={22} /><span>OPENING LOCAL ARCHIVE</span><i /></div>
+        <div className="museum-loading"><Sparkles size={22} /><span>OPENING PROJECT ARCHIVE</span><i /></div>
       </main>
     );
   }
@@ -179,11 +179,11 @@ export function AppShell() {
   if (!snapshot) {
     return (
       <main className="first-archive-shell">
-        <div className="first-archive-mark"><Circle size={13} fill="currentColor" /><span>MEMORY MUSEUM</span></div>
+        <div className="first-archive-mark"><Circle size={13} fill="currentColor" /><span>SPATIAL PROJECT ARCHIVE</span></div>
         <section>
-          <span>PRODUCTION SPATIAL ARCHIVE</span>
+          <span>PRIVATE PROJECT EVIDENCE ARCHIVE</span>
           <h1>Turn source material into a navigable project story.</h1>
-          <p>Create a private archive, import real files, preserve provenance, arrange an exhibition, and ask a curator that cites the material it interpreted.</p>
+          <p>Create a private archive, import real project files, preserve provenance, connect related artifacts, and optionally arrange a spatial story. Curator output stays separate from the source material it cites.</p>
         </section>
         <div className="first-archive-form">
           <ArchiveCreatePanel onCreate={async (title, description) => { await workspace.createArchive(title, description); }} />
@@ -237,7 +237,7 @@ export function AppShell() {
       <header className="museum-header">
         <div className="museum-brand">
           <Circle size={12} fill="currentColor" />
-          <div><strong>MEMORY MUSEUM</strong><span>{workspace.readOnly ? 'READ-ONLY SPATIAL STORY' : 'PRIVATE SPATIAL ARCHIVE'}</span></div>
+          <div><strong>PROJECT EVIDENCE ARCHIVE</strong><span>{workspace.readOnly ? 'READ-ONLY PROJECT STORY' : 'PRIVATE SOURCE ARCHIVE'}</span></div>
         </div>
         <div className="archive-switcher">
           {workspace.readOnly ? <span>{snapshot.archive.title}</span> : (

@@ -1,120 +1,92 @@
-# AI Memory Museum
+# Spatial Project Archive
 
-**A production-grade spatial archive for turning real project evidence into a navigable story.** Import images, PDFs, audio, notes and other source material, preserve provenance, arrange an exhibition, ask a citation-aware curator, and return to the same archive after refresh.
+Spatial Project Archive is a full-stack personal archive for importing project material, preserving provenance, arranging it spatially, and reviewing a project as a sequence of connected evidence rather than a folder tree.
 
-## Product flow
+The project began as an experimental interface called **AI Memory Museum**. The current implementation keeps the spatial exhibition mode as one way to browse the archive, while file import, metadata, provenance, search, relationship editing, versioned layouts, privacy, and export form the actual product foundation.
+
+## Problem
+
+Project history is usually fragmented across screenshots, PDFs, notes, audio, documents, and links. File systems preserve the files but rarely preserve why they mattered, how they related, or how the work changed over time.
+
+This project explores a personal archive where the source stays intact, interpretation stays separate, and spatial arrangement can encode chronology, project phase, relationships, and subjective importance without replacing conventional search and 2D browsing.
+
+## Working flow
 
 ```text
-Create archive
-→ Import artifacts
-→ Add metadata
-→ Generate relationships
-→ Arrange exhibition
-→ Preview story
-→ Ask curator
-→ Edit interpretation
-→ Share or export
+Create private archive
+→ import real project material
+→ process previews and metadata
+→ edit provenance and notes
+→ connect related artifacts
+→ search or browse in 2D
+→ arrange a spatial story
+→ save exhibition versions
+→ ask a citation-aware curator
+→ share selected material read-only
+→ export or delete the archive
 ```
 
-The application deliberately keeps the dreamlike full-screen museum identity, but the archive now runs on persisted source files, metadata, relationships and authored spatial positions rather than mock objects.
+## What is implemented
 
-## Production architecture
+- React + TypeScript archive workspace.
+- FastAPI backend with PostgreSQL metadata persistence.
+- S3-compatible object storage through MinIO.
+- Image, PDF, Markdown, text, audio, local video, URL metadata, and manual note import.
+- SHA-256 duplicate detection and recoverable media-processing state.
+- ffmpeg / Poppler derivative pipeline for previews.
+- Artifact metadata including phase, emotion, people, tags, description, transcript, provenance, and privacy state.
+- Explicit separation between source material, AI interpretation, and human-authored interpretation.
+- Artifact relationships and source-preserving navigation.
+- Search and conventional 2D gallery mode.
+- Spatial R3F archive with stored positions, zones, sequence, camera stops, and lighting presets.
+- 2D floor-plan authoring for the same persisted spatial model.
+- Undo/redo and versioned exhibition layouts.
+- Citation validation for curator output.
+- Read-only sharing that excludes private artifacts.
+- Archive export, revoke, retry, and delete flows.
 
-- React 18 + TypeScript + Vite application shell.
-- React Three Fiber + Drei + react-postprocessing spatial exhibition.
-- Purpose-built 2D gallery and floor-plan editor for mobile, accessibility and fallback use.
-- FastAPI backend with PostgreSQL metadata storage.
-- Alembic database migrations.
-- MinIO S3-compatible object storage with short-lived signed media URLs.
-- ffmpeg and Poppler derivative pipeline for audio/video/PDF previews.
-- Deterministic curator fallback with validated artifact citations and an adapter boundary for external AI providers.
+## Curator boundary
 
-Detailed architecture and operating boundaries are documented in:
+The curator is an interpretation layer, not the archive itself.
 
-- [`docs/production-architecture.md`](docs/production-architecture.md)
-- [`docs/archive-model.md`](docs/archive-model.md)
-- [`docs/media-pipeline.md`](docs/media-pipeline.md)
-- [`docs/spatial-navigation.md`](docs/spatial-navigation.md)
-- [`docs/accessibility-model.md`](docs/accessibility-model.md)
-- [`docs/privacy.md`](docs/privacy.md)
-- [`docs/deployment.md`](docs/deployment.md)
+The default curator is deterministic and only summarizes imported metadata, transcripts, provenance, and human notes. An OpenAI-compatible provider can be configured, but returned artifact citations are validated against the loaded archive before display.
 
-## Real artifact support
+AI output cannot overwrite source files or human notes. Missing context and uncertain relationships remain visible rather than being filled with invented history.
 
-The import flow supports:
+## Spatial mode
 
-- image
-- PDF
-- Markdown
-- TXT
-- audio
-- allowed local video
-- URL metadata
-- manual notes
+The 3D view is optional. It is useful when chronology, clustering, and relationships benefit from spatial memory, but the same archive remains accessible through search and a 2D gallery. Mobile and lower-power devices can avoid the heavier spatial runtime entirely.
 
-Artifacts preserve title, type, source, timestamps, project phase, emotion, people, tags, description, transcript, provenance, privacy state, SHA-256 file hash, derivatives, relationships, AI interpretation and human-authored interpretation.
+This project does not assume that 3D is inherently better than conventional archive interfaces.
 
-The backend provides duplicate hash detection, recoverable processing state, media retry, delete/export and access-controlled media URLs.
+## Architecture
 
-## Exhibition authoring
+```text
+src/
+  archives/       archive creation, switching, sharing
+  artifacts/      artifact metadata and provenance
+  imports/        real source ingestion
+  media/          preview rendering
+  curation/       relationships and exhibition authoring
+  curator/        interpretation UI
+  gallery-2d/     conventional accessible archive view
+  spatial/        optional R3F spatial representation
 
-The editor persists authored spatial positions and version history. Current controls include:
+backend/
+  app/            FastAPI archive, storage, media, curator services
+  migrations/     metadata schema history
+  tests/          existing backend regression coverage
+```
 
-- position
-- rotation
-- scale
-- room/zone
-- relationship links
-- story sequence
-- lighting preset
-- annotation
-- camera stop
-- undo / redo
-- version save
+## Design decisions
 
-The 2D floor-plan editor uses the same persisted spatial position model as the 3D exhibition.
+**Why preserve provenance separately?** Interpretation changes over time; the original source and where it came from should not.
 
-## Navigation and accessibility
+**Why keep human notes separate from AI output?** A generated interpretation should never become indistinguishable from the owner's memory or documentation.
 
-- Guided artifact stepping and free spatial exploration.
-- Artifact deep links via archive URL + artifact query parameter.
-- Keyboard timeline navigation and Escape handling.
-- Reduced-motion camera transitions.
-- Mobile defaults to the 2D gallery.
-- One primary overlay at a time to prevent exhibit, curator and editor collisions.
-- Mobile overlays are full-screen sheets with safe-area spacing, focus containment and focus restoration.
-- WebGL context loss and unsupported WebGL fall back to the 2D experience.
-- Low-power devices cap DPR and reduce atmospheric effects.
-- Hidden tabs suspend the R3F render loop.
-
-## AI Curator safety model
-
-Curator outputs are separate from source memory and human notes. Citation IDs are validated against the loaded archive before display. The deterministic fallback returns an interpretation, cited artifacts, pivotal moment, contradiction, missing context and suggested route without changing original artifact content.
-
-## Production captures
-
-### Desktop spatial archive
-
-![Production desktop spatial archive](./public/archive-production-desktop.png)
-
-### Artifact drawer and provenance
-
-![Production artifact detail](./public/archive-production-detail.png)
-
-### Mobile 2D archive
-
-![Production mobile archive](./public/archive-production-mobile.png)
-
-### Cross-mode proof
-
-![Production archive tour](./public/archive-production-tour.gif)
-
-The older `preview.png` and `preview-mobile.png` files are retained as the prototype baseline for visual comparison.
-
+**Why spatial authoring?** It provides an additional storytelling dimension for selected archives, while search and 2D browsing remain the practical baseline.
 
 ## Local development
-
-### Full production-like stack
 
 ```bash
 docker compose up -d --build
@@ -122,47 +94,22 @@ corepack pnpm install
 corepack pnpm dev
 ```
 
-Local services:
+Default addresses:
 
 ```text
 Web:           http://localhost:3104
 API:           http://localhost:8104
-API health:    http://localhost:8104/api/health
 MinIO API:     http://localhost:9004
 MinIO console: http://localhost:9005
 PostgreSQL:    localhost:54324
 ```
 
-The Vite development server proxies `/api` to the FastAPI server.
+The deployed instance is linked from the repository homepage.
 
-## Quality checks
+## Project status
 
-```bash
-corepack pnpm typecheck
-corepack pnpm lint
-corepack pnpm test:domain
-corepack pnpm build
-backend/.venv/bin/python -m pytest backend/tests -q
-```
+This is a working personal-archive reference implementation and ongoing interaction experiment. It is not presented as a mature multi-user digital asset management system. Internet-facing use with sensitive personal material requires a hardened authentication boundary, secrets management, operational backups, monitoring, and a reviewed privacy model.
 
-Backend integration coverage exercises real image/PDF/audio processing, duplicate detection, metadata editing, relationships, spatial persistence, exhibition versions, curator citations, search, share privacy, export/revoke/delete and failed-processing retry.
+## Credits
 
-## Performance
-
-The large R3F spatial runtime is dynamically imported so the default/mobile 2D shell does not pay the complete 3D cost up front.
-
-Current production build split at the latest validation:
-
-```text
-Application shell: ~217 KB minified / ~66 KB gzip
-Spatial R3F chunk:  ~979 KB minified / ~260 KB gzip, lazy-loaded
-CSS:                ~34 KB minified / ~8 KB gzip
-```
-
-## Visual reference adoption
-
-The reference catalog is preserved at [`docs/visual-reference-catalog.md`](docs/visual-reference-catalog.md). Investigation, license verification and adoption decisions are tracked in [`docs/reference-adoption.md`](docs/reference-adoption.md) and [`CREDITS.md`](CREDITS.md).
-
-## Privacy
-
-Archives are private by default. Read-only share manifests exclude private artifacts and human-private notes, share links can be revoked, original media is served with expiring signed URLs, and archives can be exported or deleted. See [`docs/privacy.md`](docs/privacy.md) for the current local trust boundary and production authentication requirements.
+Third-party libraries and visual references are documented in [`CREDITS.md`](CREDITS.md) and the supporting `docs/` notes.

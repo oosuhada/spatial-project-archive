@@ -18,7 +18,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error('Memory Museum boundary caught an error', error, info);
+    console.error('Spatial Project Archive boundary caught an error', error, info);
     this.props.onError?.(error);
   }
 
