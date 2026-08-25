@@ -2,11 +2,11 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: memory_museum
-      POSTGRES_USER: memory_museum
-      POSTGRES_PASSWORD: memory_museum_local
+      POSTGRES_DB: ${POSTGRES_DB:-memory_museum}
+      POSTGRES_USER: ${POSTGRES_USER:-memory_museum}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-memory_museum_local}
     ports:
-      - "54324:5432"
+      - "127.0.0.1:54324:5432"
     volumes:
       - memory_museum_postgres:/var/lib/postgresql/data
     healthcheck:
@@ -19,11 +19,11 @@ services:
     image: minio/minio:RELEASE.2025-07-23T15-54-02Z
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     ports:
-      - "9004:9000"
-      - "9005:9001"
+      - "127.0.0.1:9004:9000"
+      - "127.0.0.1:9005:9001"
     volumes:
       - memory_museum_minio:/data
     healthcheck:
@@ -37,17 +37,17 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment:
-      DATABASE_URL: postgresql+psycopg://memory_museum:memory_museum_local@db:5432/memory_museum
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-memory_museum}:${POSTGRES_PASSWORD:-memory_museum_local}@db:5432/${POSTGRES_DB:-memory_museum}
       OBJECT_STORAGE_MODE: minio
       OBJECT_STORAGE_ENDPOINT: http://minio:9000
-      OBJECT_STORAGE_PUBLIC_ENDPOINT: http://localhost:9004
-      OBJECT_STORAGE_ACCESS_KEY: minioadmin
-      OBJECT_STORAGE_SECRET_KEY: minioadmin
-      OBJECT_STORAGE_BUCKET: memory-museum
-      PUBLIC_APP_ORIGIN: http://localhost:3104
-      CURATOR_PROVIDER: deterministic
+      OBJECT_STORAGE_PUBLIC_ENDPOINT: ${OBJECT_STORAGE_PUBLIC_ENDPOINT:-http://localhost:9004}
+      OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-memory-museum}
+      PUBLIC_APP_ORIGIN: ${PUBLIC_APP_ORIGIN:-http://localhost:3104}
+      CURATOR_PROVIDER: ${CURATOR_PROVIDER:-deterministic}
     ports:
-      - "8104:8104"
+      - "127.0.0.1:8104:8104"
     depends_on:
       db:
         condition: service_healthy

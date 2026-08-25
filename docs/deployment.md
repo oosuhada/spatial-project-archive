@@ -22,13 +22,14 @@ Backend variables are documented in `backend/.env.example`.
 Production deployments should override at minimum:
 
 ```text
-DATABASE_URL
-STORAGE_ENDPOINT
-STORAGE_PUBLIC_ENDPOINT
-STORAGE_ACCESS_KEY
-STORAGE_SECRET_KEY
-STORAGE_BUCKET
+POSTGRES_PASSWORD
+MINIO_ROOT_USER
+MINIO_ROOT_PASSWORD
+OBJECT_STORAGE_PUBLIC_ENDPOINT
+PUBLIC_APP_ORIGIN
 ```
+
+The checked-in Compose file binds PostgreSQL, MinIO and FastAPI host ports to `127.0.0.1` so they are not directly reachable from the LAN or internet. A reverse proxy or tunnel should expose only the application origin and the MinIO API hostname needed for short-lived signed media URLs.
 
 ## Update sequence
 
