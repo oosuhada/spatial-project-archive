@@ -9,6 +9,7 @@ import {
   LayoutList,
   Layers3,
   MessageCircleQuestion,
+  Play,
   Plus,
   Search,
   Share2,
@@ -32,6 +33,7 @@ import { createAutomaticPositions, mergeStoredPositions } from '../spatial/layou
 import { NavigationPanel } from '../spatial/NavigationPanel';
 import { Timeline } from '../spatial/Timeline';
 import { supportsWebGL } from '../lib/shared';
+import { ArchiveGuide } from '../components/ArchiveGuide';
 import { ErrorBoundary } from './ErrorBoundary';
 import { PrimaryDrawer } from './PrimaryDrawer';
 
@@ -53,6 +55,9 @@ export function AppShell() {
   const [lightingPreset, setLightingPreset] = useState<ExhibitionVersion['lighting_preset']>('nocturne');
   const [tourActive, setTourActive] = useState(false);
   const [sceneNotice, setSceneNotice] = useState<string | null>(null);
+  const [demoBusy, setDemoBusy] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [guideStep, setGuideStep] = useState(0);
 
   const lowPower = useMemo(() => {
     const device = navigator as Navigator & { deviceMemory?: number };
@@ -158,6 +163,39 @@ export function AppShell() {
     setOverlay(null);
   };
 
+  const createGuidedDemo = async () => {
+    setDemoBusy(true);
+    setSceneNotice(null);
+    try {
+      const archive = await archiveApi.createArchive({ title: 'Guided demo · Product decision history', description: 'Synthetic project archive demonstrating provenance, relationships, search, and spatial curation.' });
+      const artifactPayloads = [
+        { title: 'Problem framing note', type: 'note', source: 'Synthetic project journal', project_phase: 'Discovery', emotion: 0.58, tags: ['synthetic', 'discovery'], people: [], description: 'The team records the original problem before choosing an interface or technical solution.', provenance: 'Synthetic onboarding note created for the guided demo.', privacy: 'private' },
+        { title: 'Customer evidence summary', type: 'note', source: 'Synthetic interview synthesis', project_phase: 'Research', emotion: 0.74, tags: ['synthetic', 'research'], people: ['Synthetic participant'], description: 'A research note says users want conclusions linked back to exact source material rather than flattened into an opaque summary.', provenance: 'Synthetic note derived from fictional onboarding research; not an observed customer claim.', privacy: 'private' },
+        { title: 'Failed interaction prototype', type: 'note', source: 'Synthetic prototype retrospective', project_phase: 'Prototype', emotion: 0.41, tags: ['synthetic', 'prototype'], people: [], description: 'A visually impressive spatial prototype failed because people could not tell why items were connected.', provenance: 'Synthetic retrospective created to demonstrate project-history relationships.', privacy: 'private' },
+        { title: 'Decision record', type: 'note', source: 'Synthetic design decision', project_phase: 'Decision', emotion: 0.86, tags: ['synthetic', 'decision'], people: [], description: 'The team keeps conventional search as the baseline and uses spatial arrangement only when chronology and relationships benefit from it.', provenance: 'Synthetic decision record created for the guided demo.', privacy: 'private' },
+      ];
+      const artifacts = [];
+      for (const payload of artifactPayloads) artifacts.push(await archiveApi.createManualArtifact(archive.id, payload));
+      for (let index = 0; index < artifacts.length - 1; index += 1) {
+        await archiveApi.createRelationship(archive.id, { source_artifact_id: artifacts[index].id, target_artifact_id: artifacts[index + 1].id, kind: 'informed', label: index === 1 ? 'prototype response' : 'project progression', strength: 0.82 });
+      }
+      await archiveApi.saveLayout(archive.id, {
+        name: 'Guided project sequence',
+        lighting_preset: 'paper',
+        positions: artifacts.map((artifact, index) => ({ artifact_id: artifact.id, x: -4.5 + index * 3, y: 0, z: index % 2 === 0 ? 0 : -1.6, rotation_y: 0, scale: 1, zone: artifactPayloads[index].project_phase, sequence: index + 1, camera_stop: true })),
+      });
+      await workspace.load(archive.id);
+      setGalleryMode(true);
+      setGuideStep(0);
+      setGuideOpen(true);
+      setOverlay('index');
+    } catch (error) {
+      setSceneNotice(error instanceof Error ? error.message : 'Could not create guided archive.');
+    } finally {
+      setDemoBusy(false);
+    }
+  };
+
   if (workspace.loading && !snapshot) {
     return (
       <main className="museum-shell loading-shell">
@@ -186,6 +224,8 @@ export function AppShell() {
           <span>PRIVATE PROJECT EVIDENCE ARCHIVE</span>
           <h1>Turn source material into a navigable project story.</h1>
           <p>Create a private archive, import real project files, preserve provenance, connect related artifacts, and optionally arrange a spatial story. Curator output stays separate from the source material it cites.</p>
+          <button type="button" className="first-demo-action" onClick={() => void createGuidedDemo()} disabled={demoBusy}><Play size={15} fill="currentColor" />{demoBusy ? 'Building sample archive…' : 'Try guided sample archive'}</button>
+          <small className="first-demo-note">Creates four clearly labeled synthetic artifacts, relationships, and a saved layout, then opens a guided walkthrough.</small>
         </section>
         <div className="first-archive-form">
           <ArchiveCreatePanel onCreate={async (title, description) => { await workspace.createArchive(title, description); }} />
@@ -254,7 +294,7 @@ export function AppShell() {
           <button type="button" className={galleryMode ? 'active' : ''} onClick={() => setGalleryMode((current) => !current)} disabled={!webgl}>
             {galleryMode ? <Layers3 size={14} /> : <GalleryHorizontal size={14} />}{galleryMode ? 'Spatial' : '2D'}
           </button>
-          <button type="button" onClick={() => setOverlay('navigation')}><Compass size={14} /> Help</button>
+          <button type="button" onClick={() => { setGuideStep(0); setGuideOpen(true); }}><Compass size={14} /> Guide</button>
         </div>
       </header>
 
@@ -351,6 +391,12 @@ export function AppShell() {
           {overlay === 'archive' && !workspace.readOnly ? <ArchiveCreatePanel onCreate={async (title, description) => { await workspace.createArchive(title, description); setOverlay(null); }} /> : null}
         </PrimaryDrawer>
       ) : null}
+      {guideOpen ? <ArchiveGuide step={guideStep} onStep={setGuideStep} onClose={() => setGuideOpen(false)} onAction={(action) => {
+        if (action === 'index') setOverlay('index');
+        if (action === 'artifact' && orderedArtifacts[0]) selectArtifact(orderedArtifacts[0].id);
+        if (action === 'search') setOverlay('search');
+        if (action === 'arrange') { setMode('time'); setOverlay('editor'); }
+      }} /> : null}
     </main>
   );
 }

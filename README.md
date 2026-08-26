@@ -45,6 +45,7 @@ Create private archive
 - Citation validation for curator output.
 - Read-only sharing that excludes private artifacts.
 - Archive export, revoke, retry, and delete flows.
+- Guided sample archive that creates clearly labeled synthetic project artifacts, provenance, relationships, and a saved spatial layout before walking through Index, artifact inspection, search, and arrangement.
 
 ## Curator boundary
 
