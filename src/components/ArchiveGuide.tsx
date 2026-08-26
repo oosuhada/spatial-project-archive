@@ -1,7 +1,7 @@
 import { ArrowRight, Check, X } from 'lucide-react';
 
 const steps = [
-  { action: 'index', title: 'Check archive quality first', body: 'Archive Index shows missing provenance, failed processing, isolated artifacts, and source-backed coverage before you spend time arranging anything.' },
+  { action: 'index', title: 'Check archive quality first', body: 'Archive Index shows missing provenance, failed processing, isolated artifacts, a project digest, and relationship suggestions before you spend time arranging anything.' },
   { action: 'artifact', title: 'Open one artifact deeply', body: 'Source, provenance, metadata, AI interpretation, and your own interpretation remain separate. Relationships link records without rewriting the source.' },
   { action: 'search', title: 'Use normal retrieval before 3D', body: 'Search and the 2D gallery are the practical baseline. Spatial mode is optional and should help storytelling, not replace direct retrieval.' },
   { action: 'arrange', title: 'Arrange a story only when useful', body: 'The editor saves position, sequence, zone, camera stops, and lighting as a versioned exhibition without changing the underlying archive.' },
