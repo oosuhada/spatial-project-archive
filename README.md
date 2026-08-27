@@ -1,157 +1,149 @@
 # Spatial Project Archive
 
-The archive now prioritizes large-scale collection operations: **batch multi-file import with a persistent import inbox**, per-file duplicate/failure handling, an archive operations dashboard, metadata suggestion review, deterministic phase/tag grouping proposals, near-duplicate review groups, chronology/event grouping, provenance cleanup queues, isolated-artifact visibility, and approve/dismiss relationship suggestions. Suggestions never rewrite source data automatically; metadata and relationships change only after an explicit human action.
+**A full-stack project archive for preserving source material, human memory, AI interpretation, relationships, and spatial project history without collapsing them into one generated story.**  
+**원문 자료, 사람의 기억, AI 해석, 관계, 공간적 프로젝트 히스토리를 하나의 생성형 이야기로 덮어쓰지 않고 보존하는 풀스택 프로젝트 아카이브입니다.**
 
-Spatial Project Archive is a full-stack personal archive for importing project material, preserving provenance, arranging it spatially, and reviewing a project as a sequence of connected evidence rather than a folder tree.
+**Live demo / 라이브 데모:** https://memory.oosu.dev/
 
-## Portfolio case study
+## Overview / 개요
 
-Spatial Project Archive is an independent archive experiment around one question: **can AI interpret personal project history without becoming indistinguishable from the source material or the owner’s own memory?**
+Spatial Project Archive asks: **can AI interpret project history without becoming indistinguishable from the source material or the owner's own memory?** Original files and provenance remain primary; human notes, curator interpretation, relationships, timelines, and spatial layouts are separate reversible layers.
 
-The first visit is now sample-first instead of opening an operations-only archive. If the example does not exist, the app persists **12 synthetic project artifacts** spanning Discovery → Research → Concept → Prototype → Architecture → Build → Decision → UX → Release, plus relationship links, human notes, curator interpretations, and a saved spatial layout. Existing user archives are never replaced and remain available in the archive switcher.
+Spatial Project Archive는 **AI가 프로젝트 역사를 해석하면서도 원문 자료나 사용자의 실제 기억과 구분되지 않는 상태를 피할 수 있는가?**를 다룹니다. Original File과 Provenance를 우선 보존하고 Human Note, Curator Interpretation, Relationship, Timeline, Spatial Layout은 분리된 reversible layer로 유지합니다.
 
-### Example archive — a complete project history on first visit
+A fresh deployment opens a persisted **Example · Product evolution archive** with 12 synthetic artifacts, multiple project phases, human notes, curator interpretations, relationships, and a saved spatial layout instead of a nearly empty archive.
 
-![Twelve-artifact example archive in the desktop spatial workspace](docs/portfolio/01-example-archive-overview.png)
+첫 방문에는 거의 비어 있는 Archive 대신 12개의 synthetic artifact, 여러 project phase, human note, curator interpretation, relationship, saved spatial layout을 포함한 **Example · Product evolution archive**가 실제 backend에 저장되어 열립니다.
 
-### Killer interaction — Constellation Focus
+## Example archive / 예시 아카이브
 
-Select an artifact from the timeline, then focus its direct relationship neighborhood. The camera reframes around the connected evidence and unrelated material is removed from the scene without changing the persisted archive.
+![Complete example archive on first visit](docs/portfolio/01-example-archive-overview.png)
 
-![Relationship neighborhood isolated in the spatial scene](docs/portfolio/02-constellation-focus.png)
+The sample follows a project from problem framing and research through prototype failure, architecture decisions, implementation, onboarding redesign, spatial lenses, and production reflection.
 
-### Killer interaction — Temporal Excavation
+예시 Archive는 Problem Framing과 Research에서 시작해 Prototype Failure, Architecture Decision, Implementation, Onboarding Redesign, Spatial Lens, Production Reflection까지 하나의 프로젝트가 변화하는 과정을 보여줍니다.
 
-The temporal lens reveals the archive incrementally from past to present. Artifacts and relationship lines only appear once both endpoints exist at the chosen point in project time.
+## Core interactions / 핵심 인터랙션
 
-![Archive partially revealed through the temporal excavation lens](docs/portfolio/03-temporal-excavation.png)
+### Constellation Focus / 관계 집중 탐색
 
-### Killer interaction — one artifact, separate source / human / AI layers
+Select an artifact and isolate only its direct relationship neighborhood. The camera reframes the connected evidence cluster and unrelated artifacts disappear from the active scene.
 
-The case inspector binds to the selected persisted artifact and switches among the source record, the owner's `human_edit`, and `curator_interpretation` without merging those fields into one generated story.
+Artifact 하나를 선택하면 직접 연결된 relationship neighborhood만 남기고 카메라를 해당 evidence cluster 중심으로 재구성합니다. 관련 없는 artifact는 active scene에서 제외됩니다.
 
-![Persisted human interpretation shown separately from source and AI state](docs/portfolio/04-source-human-ai-layers.png)
+![Relationship neighborhood isolated in the spatial archive](docs/portfolio/02-constellation-focus.png)
 
-### Architecture proof
+### Temporal Excavation / 시간축 발굴
 
-![Archive source-of-truth and representation architecture](docs/portfolio/04-architecture.png)
+The temporal scrubber reveals the archive from past to present. Relationships appear only after both endpoints exist, so the scene shows how project context accumulated rather than only the final arrangement.
 
-**Common approach:** files → embeddings → generated story.  
-**This archive:** immutable-ish source record → provenance → separate human/AI interpretation → review → search/2D/spatial representations.
+Temporal scrubber를 움직이면 Archive가 과거에서 현재 순으로 드러납니다. Relationship도 양쪽 artifact가 모두 존재하는 시점부터 나타나기 때문에 최종 배치가 아니라 프로젝트 context가 쌓이는 과정을 볼 수 있습니다.
 
-The project began as an experimental interface called **AI Memory Museum**. The current implementation keeps the spatial exhibition mode as one way to browse the archive, while file import, metadata, provenance, search, relationship editing, versioned layouts, privacy, and export form the actual product foundation.
+![Archive revealed through time](docs/portfolio/03-temporal-excavation.png)
 
-## Problem
+### Source / Human / AI layers / 원문·사람·AI 레이어
 
-Project history is usually fragmented across screenshots, PDFs, notes, audio, documents, and links. File systems preserve the files but rarely preserve why they mattered, how they related, or how the work changed over time.
+The same persisted artifact can be switched between **Source Record**, **Human Memory**, and **AI Interpretation**. Missing interpretation stays visibly missing rather than being filled with plausible text.
 
-This project explores a personal archive where the source stays intact, interpretation stays separate, and spatial arrangement can encode chronology, project phase, relationships, and subjective importance without replacing conventional search and 2D browsing.
+동일한 persisted artifact를 **Source Record**, **Human Memory**, **AI Interpretation** 세 레이어로 전환할 수 있습니다. 해석이 없다면 그 상태를 그대로 보여주며 그럴듯한 텍스트로 자동 보완하지 않습니다.
 
-## Working flow
+![Separate source, human, and AI interpretation layers](docs/portfolio/04-source-human-ai-layers.png)
 
-```text
-Create private archive
-→ import real project material
-→ process previews and metadata
-→ edit provenance and notes
-→ connect related artifacts
-→ search or browse in 2D
-→ arrange a spatial story
-→ save exhibition versions
-→ ask a citation-aware curator
-→ share selected material read-only
-→ export or delete the archive
-```
+## Architecture & Topics / 아키텍처 및 주제
 
-## What is implemented
-
-- React + TypeScript archive workspace.
-- FastAPI backend with PostgreSQL metadata persistence.
-- S3-compatible object storage through MinIO.
-- Image, PDF, Markdown, text, audio, local video, URL metadata, and manual note import.
-- SHA-256 duplicate detection and recoverable media-processing state.
-- ffmpeg / Poppler derivative pipeline for previews.
-- Artifact metadata including phase, emotion, people, tags, description, transcript, provenance, and privacy state.
-- Explicit separation between source material, AI interpretation, and human-authored interpretation.
-- Artifact relationships and source-preserving navigation.
-- Archive Index summarizing provenance coverage, processing failures, relationship isolation, content types, project phases, and artifacts that need attention.
-- Archive operations queues for unreviewed artifacts, recurring-token project grouping suggestions, deterministic metadata proposals, provenance cleanup, and near-duplicate review; every proposed metadata change requires explicit approval.
-- Deterministic project digest export with phase coverage, recurring tags, chronology, and relationship state.
-- Relationship suggestions from shared tags, people, project phase, and nearby dates; suggestions require explicit human confirmation before persistence.
-- Search and conventional 2D gallery mode.
-- Spatial R3F archive with stored positions, zones, sequence, camera stops, and lighting presets.
-- 2D floor-plan authoring for the same persisted spatial model.
-- Undo/redo and versioned exhibition layouts.
-- Citation validation for curator output.
-- Read-only sharing that excludes private artifacts.
-- Archive export, revoke, retry, and delete flows.
-- Guided sample archive that creates clearly labeled synthetic project artifacts, provenance, relationships, and a saved spatial layout before walking through Index, artifact inspection, search, and arrangement.
-
-## Curator boundary
-
-The curator is an interpretation layer, not the archive itself.
-
-The default curator is deterministic and only summarizes imported metadata, transcripts, provenance, and human notes. An OpenAI-compatible provider can be configured, but returned artifact citations are validated against the loaded archive before display.
-
-AI output cannot overwrite source files or human notes. Missing context and uncertain relationships remain visible rather than being filled with invented history.
-
-## Spatial mode
-
-The 3D view is optional. It is useful when chronology, clustering, and relationships benefit from spatial memory, but the same archive remains accessible through search and a 2D gallery. Mobile and lower-power devices can avoid the heavier spatial runtime entirely.
-
-This project does not assume that 3D is inherently better than conventional archive interfaces.
-
-## Architecture
+### Architecture / 아키텍처
 
 ```text
-src/
-  archives/       archive creation, switching, sharing
-  artifacts/      artifact metadata and provenance
-  imports/        real source ingestion
-  media/          preview rendering
-  curation/       relationships and exhibition authoring
-  curator/        interpretation UI
-  gallery-2d/     conventional accessible archive view
-  spatial/        optional R3F spatial representation
-
-backend/
-  app/            FastAPI archive, storage, media, curator services
-  migrations/     metadata schema history
-  tests/          existing backend regression coverage
+Files / URLs / Notes
+  ↓
+Ingestion + SHA-256 duplicate handling
+  ↓
+MinIO object storage ── original binaries / derivatives
+  ↓
+PostgreSQL archive domain ── metadata / provenance / relationships / privacy
+  ↓
+Human notes + Curator suggestions ── separate interpretation layers
+  ↓
+Search / 2D / Timeline / Spatial representations
 ```
 
-## Design decisions
+- **Frontend:** React, TypeScript, React Three Fiber, Drei, postprocessing, Motion.
+- **Backend:** FastAPI, PostgreSQL metadata, MinIO object storage, ffmpeg/Poppler derivatives.
+- **Archive domain:** artifacts, provenance, privacy, relationships, exhibition versions, spatial positions.
+- **Interpretation boundary:** source, human-authored memory, and curator/AI interpretation remain separate fields.
 
-**Why preserve provenance separately?** Interpretation changes over time; the original source and where it came from should not.
+- **프론트엔드:** React, TypeScript, React Three Fiber, Drei, postprocessing, Motion.
+- **백엔드:** FastAPI, PostgreSQL metadata, MinIO object storage, ffmpeg/Poppler derivative 처리.
+- **아카이브 도메인:** Artifact, Provenance, Privacy, Relationship, Exhibition Version, Spatial Position.
+- **해석 경계:** Source, Human-authored Memory, Curator/AI Interpretation을 서로 다른 field로 유지합니다.
 
-**Why keep human notes separate from AI output?** A generated interpretation should never become indistinguishable from the owner's memory or documentation.
+### Topics / 주제
 
-**Why spatial authoring?** It provides an additional storytelling dimension for selected archives, while search and 2D browsing remain the practical baseline.
+[`digital-archive`](https://github.com/topics/digital-archive) · [`knowledge-management`](https://github.com/topics/knowledge-management) · [`provenance`](https://github.com/topics/provenance) · [`spatial-ui`](https://github.com/topics/spatial-ui) · [`human-in-the-loop`](https://github.com/topics/human-in-the-loop) · [`react-three-fiber`](https://github.com/topics/react-three-fiber) · [`fastapi`](https://github.com/topics/fastapi) · [`postgresql`](https://github.com/topics/postgresql) · [`minio`](https://github.com/topics/minio)
 
-## Local development
+## Working flow / 작업 흐름
+
+```text
+Create/open archive / Archive 생성·열기
+→ import files, URLs or notes / 파일·URL·Note 가져오기
+→ process previews & metadata / Preview·Metadata 처리
+→ review provenance / Provenance 검토
+→ add human notes / Human Note 작성
+→ connect artifacts / Artifact 관계 연결
+→ search or browse in 2D / Search·2D 탐색
+→ inspect chronology / Timeline 확인
+→ arrange spatial story / Spatial Story 구성
+→ save exhibition version / Exhibition Version 저장
+→ use citation-aware curator / Citation-aware Curator 사용
+→ share or export / 공유·내보내기
+```
+
+## What is implemented / 구현 내용
+
+- Image, PDF, Markdown, text, audio, local video, URL metadata, and manual-note import.  
+  Image, PDF, Markdown, Text, Audio, Local Video, URL Metadata, Manual Note import.
+- SHA-256 duplicate detection with recoverable processing state.  
+  SHA-256 duplicate detection과 recoverable processing state.
+- Artifact metadata, transcript, project phase, emotion, people, tags, provenance, and privacy.  
+  Artifact metadata, transcript, project phase, emotion, people, tag, provenance, privacy.
+- Batch import inbox, duplicate/failure handling, metadata proposals, provenance cleanup, near-duplicate review.  
+  Batch Import Inbox, Duplicate/Failure 처리, Metadata Proposal, Provenance Cleanup, Near-duplicate Review.
+- Explicit source / human / AI interpretation separation.  
+  Source / Human / AI Interpretation의 명시적 분리.
+- Search, 2D gallery, timeline, R3F spatial archive, stored layout, lighting, camera stops.  
+  Search, 2D Gallery, Timeline, R3F Spatial Archive, Stored Layout, Lighting, Camera Stop.
+- Relationship suggestions with human approval and citation validation for curator output.  
+  Human Approval을 요구하는 Relationship Suggestion과 Curator Output Citation Validation.
+- Versioned exhibition layouts, undo/redo, export, privacy-aware read-only sharing, delete workflow.  
+  Versioned Exhibition Layout, Undo/Redo, Export, Privacy-aware Read-only Share, Delete Workflow.
+
+## Curator and data boundary / 큐레이터 및 데이터 경계
+
+The curator may interpret and connect material, but it cannot overwrite original source content. Suggestions remain separate until explicitly approved, and citation validation prevents an interpretation from appearing without addressable archive evidence.
+
+Curator는 자료를 해석하고 연결할 수 있지만 original source content를 덮어쓸 수 없습니다. Suggestion은 명시적으로 승인되기 전까지 분리되어 있으며, Citation Validation을 통해 addressable archive evidence 없이 해석이 노출되는 것을 막습니다.
+
+All bundled example artifacts are synthetic and labeled as such.
+
+기본 제공 Example Artifact는 모두 synthetic이며 그 사실을 명확히 표시합니다.
+
+## Local development / 로컬 개발
 
 ```bash
-docker compose up -d --build
 corepack pnpm install
+docker compose up -d
 corepack pnpm dev
 ```
 
-Default addresses:
+Default web address / 기본 주소: `http://localhost:3104`
 
-```text
-Web:           http://localhost:3104
-API:           http://localhost:8104
-MinIO API:     http://localhost:9004
-MinIO console: http://localhost:9005
-PostgreSQL:    localhost:54324
-```
+## Project status / 프로젝트 상태
 
-The deployed instance is linked from the repository homepage.
+This is a working personal-archive reference implementation and spatial interaction experiment. Before using it for sensitive multi-user data, authentication, organization authorization, backup policy, storage lifecycle management, and production monitoring would need additional hardening.
 
-## Project status
+동작하는 personal-archive reference implementation이자 spatial interaction experiment입니다. 민감한 multi-user data를 다루기 위해서는 인증, 조직 권한, backup policy, storage lifecycle, production monitoring을 추가로 강화해야 합니다.
 
-This is a working personal-archive reference implementation and ongoing interaction experiment. It is not presented as a mature multi-user digital asset management system. Internet-facing use with sensitive personal material requires a hardened authentication boundary, secrets management, operational backups, monitoring, and a reviewed privacy model.
+## Credits / 크레딧
 
-## Credits
-
-Third-party libraries and visual references are documented in [`CREDITS.md`](CREDITS.md) and the supporting `docs/` notes.
+Third-party libraries and visual references are documented in [`CREDITS.md`](CREDITS.md) and `docs/`.  
+외부 라이브러리와 시각적 레퍼런스는 [`CREDITS.md`](CREDITS.md) 및 `docs/`에 정리되어 있습니다.
