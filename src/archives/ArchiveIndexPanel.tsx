@@ -18,6 +18,20 @@ function normalizedStem(value: string) {
   return value.toLowerCase().replace(/\.[a-z0-9]{1,8}$/i, '').replace(/\b(copy|final|v\d+|rev\d+|draft)\b/g, '').replace(/[^a-z0-9가-힣]+/g, ' ').trim();
 }
 
+function projectTokens(artifact: Artifact) {
+  const ignored = new Set(['final', 'draft', 'copy', 'image', 'audio', 'video', 'document', 'notes', 'note', 'file', 'screen', 'capture']);
+  return normalizedStem(`${artifact.title} ${artifact.original_filename ?? ''} ${artifact.source}`)
+    .split(' ')
+    .filter((token) => token.length >= 4 && !ignored.has(token) && !/^\d+$/.test(token));
+}
+
+function provenanceSuggestion(artifact: Artifact) {
+  const parts = [`Archive source: ${artifact.source || artifact.title}`];
+  if (artifact.original_filename) parts.push(`original filename: ${artifact.original_filename}`);
+  parts.push(`archive import date: ${artifact.created_at.slice(0, 10)}`);
+  return parts.join(' · ');
+}
+
 function metadataSuggestion(artifact: Artifact, artifacts: Artifact[]) {
   const text = `${artifact.title} ${artifact.original_filename ?? ''} ${artifact.source} ${artifact.description}`.toLowerCase();
   const phaseRules: Array<[RegExp, string]> = [
@@ -108,6 +122,21 @@ export function ArchiveIndexPanel({ snapshot, onOpenArtifact, onConnectArtifacts
     .filter((item) => !dismissedMetadata.includes(item.artifact.id))
     .slice(0, 12);
 
+  const projectSuggestions = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const artifact of artifacts) {
+      for (const token of new Set(projectTokens(artifact))) counts.set(token, (counts.get(token) ?? 0) + 1);
+    }
+    return artifacts.flatMap((artifact) => {
+      if (artifact.tags.some((tag) => tag.toLowerCase().startsWith('project:'))) return [];
+      const candidate = [...new Set(projectTokens(artifact))]
+        .filter((token) => (counts.get(token) ?? 0) >= 2)
+        .sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0))[0];
+      if (!candidate) return [];
+      return [{ artifact, tag: `project:${candidate}`, matches: counts.get(candidate) ?? 0 }];
+    }).filter((item) => !dismissedMetadata.includes(`project:${item.artifact.id}`)).slice(0, 12);
+  }, [artifacts, dismissedMetadata]);
+
   const duplicatePairs = useMemo(() => {
     const pairs: Array<{ left: Artifact; right: Artifact; reason: string }> = [];
     for (let leftIndex = 0; leftIndex < artifacts.length; leftIndex += 1) {
@@ -136,6 +165,16 @@ export function ArchiveIndexPanel({ snapshot, onOpenArtifact, onConnectArtifacts
     }
     return [...groups.entries()].map(([label, items]) => ({ label, items })).slice(-12).reverse();
   }, [artifacts]);
+
+  const unreviewedQueue = useMemo(() => artifacts.map((artifact) => {
+    const issues: string[] = [];
+    if (!artifact.description.trim()) issues.push('description');
+    if (!artifact.tags.length) issues.push('tags');
+    if (!artifact.project_phase || artifact.project_phase === 'Unsorted') issues.push('phase');
+    if (artifact.provenance.trim().length < 24 || /^Imported from local file:/i.test(artifact.provenance.trim())) issues.push('provenance');
+    if (artifacts.length > 1 && !connectedIds.has(artifact.id)) issues.push('relationship');
+    return { artifact, issues };
+  }).filter((item) => item.issues.length > 0).sort((a, b) => b.issues.length - a.issues.length), [artifacts, connectedIds]);
 
   const existingPairs = new Set(relationships.flatMap((relationship) => [
     `${relationship.source_artifact_id}:${relationship.target_artifact_id}`,
@@ -216,6 +255,29 @@ export function ArchiveIndexPanel({ snapshot, onOpenArtifact, onConnectArtifacts
           <div className="metadata-proposal">{suggestion.changes.project_phase ? <span>Phase → <b>{suggestion.changes.project_phase}</b></span> : null}{suggestion.changes.tags ? <span>Tags → <b>{suggestion.changes.tags.join(', ')}</b></span> : null}</div>
           <div className="review-actions"><button type="button" disabled={workingId === suggestion.artifact.id} onClick={async () => { setWorkingId(suggestion.artifact.id); try { await onUpdateArtifact(suggestion.artifact.id, suggestion.changes); } finally { setWorkingId(null); } }}><Check size={12} /> Approve</button><button type="button" onClick={() => setDismissedMetadata((current) => [...current, suggestion.artifact.id])}><X size={12} /> Dismiss</button></div>
         </article>) : <div className="archive-index-clear"><ShieldCheck size={16} /><span>No pending phase or tag suggestions under the current deterministic rules.</span></div>}
+      </section>
+
+      <section className="archive-project-grouping">
+        <div className="section-heading"><div><strong>Project grouping suggestions</strong><span>Recurring title, filename, and source tokens can become explicit project tags. A suggestion is metadata only and is applied only after approval.</span></div><Layers3 size={15} /></div>
+        {projectSuggestions.length ? projectSuggestions.map((suggestion) => <article key={suggestion.artifact.id}>
+          <button className="suggestion-open" type="button" onClick={() => onOpenArtifact(suggestion.artifact.id)}><span>{suggestion.artifact.project_phase || 'Unsorted'}</span><strong>{suggestion.artifact.title}</strong><small>{suggestion.matches} artifacts share the recurring token</small></button>
+          <div className="metadata-proposal"><span>Project tag → <b>{suggestion.tag}</b></span></div>
+          <div className="review-actions"><button type="button" disabled={workingId === suggestion.artifact.id} onClick={async () => { setWorkingId(suggestion.artifact.id); try { await onUpdateArtifact(suggestion.artifact.id, { tags: [...new Set([...suggestion.artifact.tags, suggestion.tag])] }); } finally { setWorkingId(null); } }}><Check size={12} /> Approve</button><button type="button" onClick={() => setDismissedMetadata((current) => [...current, `project:${suggestion.artifact.id}`])}><X size={12} /> Dismiss</button></div>
+        </article>) : <div className="archive-index-clear"><ShieldCheck size={16} /><span>No recurring project token is strong enough to suggest a project tag right now.</span></div>}
+      </section>
+
+      <section className="archive-provenance-review">
+        <div className="section-heading"><div><strong>Provenance cleanup queue</strong><span>Weak import-generated provenance is never rewritten automatically. Approving uses only already stored source, filename, and archive-import facts.</span></div><ShieldCheck size={15} /></div>
+        {provenanceCleanup.length ? provenanceCleanup.slice(0, 12).map((artifact) => <article key={artifact.id}>
+          <button className="suggestion-open" type="button" onClick={() => onOpenArtifact(artifact.id)}><span>{artifact.type}</span><strong>{artifact.title}</strong><small>{artifact.provenance || 'No provenance recorded'}</small></button>
+          <div className="provenance-proposal"><span>Proposed source trail</span><p>{provenanceSuggestion(artifact)}</p></div>
+          <div className="review-actions"><button type="button" disabled={workingId === artifact.id} onClick={async () => { setWorkingId(artifact.id); try { await onUpdateArtifact(artifact.id, { provenance: provenanceSuggestion(artifact) }); } finally { setWorkingId(null); } }}><Check size={12} /> Use stored facts</button><button type="button" onClick={() => onOpenArtifact(artifact.id)}>Edit manually</button></div>
+        </article>) : <div className="archive-index-clear"><ShieldCheck size={16} /><span>No artifact currently needs provenance cleanup under the structural checks.</span></div>}
+      </section>
+
+      <section className="archive-unreviewed-queue">
+        <div className="section-heading"><div><strong>Unreviewed artifact queue</strong><span>Artifacts rise to the top when several archive-maintenance issues remain. Opening an item takes you to the editable metadata panel.</span></div><FileQuestion size={15} /></div>
+        {unreviewedQueue.length ? unreviewedQueue.slice(0, 16).map(({ artifact, issues }) => <button type="button" key={artifact.id} onClick={() => onOpenArtifact(artifact.id)}><span>{String(issues.length).padStart(2, '0')}</span><div><strong>{artifact.title}</strong><small>{issues.join(' · ')}</small></div><b>REVIEW</b></button>) : <div className="archive-index-clear"><ShieldCheck size={16} /><span>No artifact is waiting in the structural review queue.</span></div>}
       </section>
 
       <section className="archive-duplicate-review">

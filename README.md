@@ -40,6 +40,7 @@ Create private archive
 - Explicit separation between source material, AI interpretation, and human-authored interpretation.
 - Artifact relationships and source-preserving navigation.
 - Archive Index summarizing provenance coverage, processing failures, relationship isolation, content types, project phases, and artifacts that need attention.
+- Archive operations queues for unreviewed artifacts, recurring-token project grouping suggestions, deterministic metadata proposals, provenance cleanup, and near-duplicate review; every proposed metadata change requires explicit approval.
 - Deterministic project digest export with phase coverage, recurring tags, chronology, and relationship state.
 - Relationship suggestions from shared tags, people, project phase, and nearby dates; suggestions require explicit human confirmation before persistence.
 - Search and conventional 2D gallery mode.
