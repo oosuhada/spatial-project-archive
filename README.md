@@ -4,6 +4,17 @@ The archive now prioritizes large-scale collection operations: **batch multi-fil
 
 Spatial Project Archive is a full-stack personal archive for importing project material, preserving provenance, arranging it spatially, and reviewing a project as a sequence of connected evidence rather than a folder tree.
 
+## Portfolio case study
+
+This project is **Inspectable AI Systems / 04 — Memory**. Its portfolio question is: **can AI interpret personal project history without becoming indistinguishable from the source material or the owner’s own memory?**
+
+The representative interaction switches a synthetic artifact between **source record / human memory / AI interpretation** to make the data boundary visible. In the real archive, source files remain intact, generated metadata and relationships remain proposals until explicit approval, and spatial presentation is only one view over the same searchable archive.
+
+![Spatial Project Archive portfolio overview](docs/portfolio-overview.png)
+
+**Common approach:** files → embeddings → generated story.  
+**This archive:** immutable-ish source record → provenance → separate human/AI interpretation → review → search/2D/spatial representations.
+
 The project began as an experimental interface called **AI Memory Museum**. The current implementation keeps the spatial exhibition mode as one way to browse the archive, while file import, metadata, provenance, search, relationship editing, versioned layouts, privacy, and export form the actual product foundation.
 
 ## Problem

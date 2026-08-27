@@ -34,6 +34,7 @@ import { NavigationPanel } from '../spatial/NavigationPanel';
 import { Timeline } from '../spatial/Timeline';
 import { supportsWebGL } from '../lib/shared';
 import { ArchiveGuide } from '../components/ArchiveGuide';
+import { PortfolioNarrative } from '../components/PortfolioNarrative';
 import { ErrorBoundary } from './ErrorBoundary';
 import { PrimaryDrawer } from './PrimaryDrawer';
 
@@ -42,7 +43,7 @@ const MemoryScene = lazy(async () => {
   return { default: module.MemoryScene };
 });
 
-type Overlay = 'artifact' | 'import' | 'search' | 'index' | 'curator' | 'editor' | 'share' | 'navigation' | 'archive' | null;
+type Overlay = 'artifact' | 'import' | 'search' | 'index' | 'curator' | 'editor' | 'share' | 'navigation' | 'archive' | 'case' | null;
 
 export function AppShell() {
   const reduced = Boolean(useReducedMotion());
@@ -83,6 +84,10 @@ export function AppShell() {
   useEffect(() => {
     setLightingPreset(snapshot?.version?.lighting_preset ?? 'nocturne');
   }, [snapshot?.version?.id, snapshot?.version?.lighting_preset]);
+
+  useEffect(() => {
+    if (snapshot && new URLSearchParams(window.location.search).get('case') === '1') setOverlay('case');
+  }, [snapshot?.archive.id]);
 
   useEffect(() => {
     const onVisibility = () => setDocumentVisible(document.visibilityState !== 'hidden');
@@ -221,8 +226,8 @@ export function AppShell() {
       <main className="first-archive-shell">
         <div className="first-archive-mark"><Circle size={13} fill="currentColor" /><span>SPATIAL PROJECT ARCHIVE</span></div>
         <section>
-          <span>PRIVATE PROJECT EVIDENCE ARCHIVE</span>
-          <h1>Turn source material into a navigable project story.</h1>
+          <span>INSPECTABLE AI SYSTEMS · MEMORY / 04 OF 04</span>
+          <h1>Preserve what happened before asking AI what it means.</h1>
           <p>Create a private archive, import real project files, preserve provenance, connect related artifacts, and optionally arrange a spatial story. Curator output stays separate from the source material it cites.</p>
           <button type="button" className="first-demo-action" onClick={() => void createGuidedDemo()} disabled={demoBusy}><Play size={15} fill="currentColor" />{demoBusy ? 'Building sample archive…' : 'Try guided sample archive'}</button>
           <small className="first-demo-note">Creates four clearly labeled synthetic artifacts, relationships, and a saved layout, then opens a guided walkthrough.</small>
@@ -230,6 +235,7 @@ export function AppShell() {
         <div className="first-archive-form">
           <ArchiveCreatePanel onCreate={async (title, description) => { await workspace.createArchive(title, description); }} />
         </div>
+        <PortfolioNarrative />
       </main>
     );
   }
@@ -244,6 +250,7 @@ export function AppShell() {
             : overlay === 'share' ? 'Share & export'
               : overlay === 'navigation' ? 'Navigate the archive'
                 : overlay === 'archive' ? 'Create archive'
+                  : overlay === 'case' ? 'Why this archive exists'
                   : '';
 
   return (
@@ -280,7 +287,7 @@ export function AppShell() {
       <header className="museum-header">
         <div className="museum-brand">
           <Circle size={12} fill="currentColor" />
-          <div><strong>PROJECT EVIDENCE ARCHIVE</strong><span>{workspace.readOnly ? 'READ-ONLY PROJECT STORY' : 'PRIVATE SOURCE ARCHIVE'}</span></div>
+          <div><strong>PROJECT EVIDENCE ARCHIVE</strong><span>{workspace.readOnly ? 'READ-ONLY PROJECT STORY' : 'SOURCE ≠ HUMAN MEMORY ≠ AI INTERPRETATION'}</span></div>
         </div>
         <div className="archive-switcher">
           {workspace.readOnly ? <span>{snapshot.archive.title}</span> : (
@@ -295,6 +302,7 @@ export function AppShell() {
             {galleryMode ? <Layers3 size={14} /> : <GalleryHorizontal size={14} />}{galleryMode ? 'Spatial' : '2D'}
           </button>
           <button type="button" onClick={() => { setGuideStep(0); setGuideOpen(true); }}><Compass size={14} /> Guide</button>
+          <button type="button" onClick={() => setOverlay('case')}><Sparkles size={14} /> Case</button>
         </div>
       </header>
 
@@ -349,7 +357,7 @@ export function AppShell() {
       />
 
       {overlay ? (
-        <PrimaryDrawer title={overlayTitle} eyebrow={overlay === 'artifact' ? `${workspace.selected?.type ?? 'artifact'} · ${workspace.selected?.project_phase ?? ''}` : undefined} onClose={closeOverlay} wide={overlay === 'editor'}>
+        <PrimaryDrawer title={overlayTitle} eyebrow={overlay === 'artifact' ? `${workspace.selected?.type ?? 'artifact'} · ${workspace.selected?.project_phase ?? ''}` : undefined} onClose={closeOverlay} wide={overlay === 'editor' || overlay === 'case'}>
           {overlay === 'artifact' && workspace.selected ? (
             <ArtifactPanel
               artifact={workspace.selected}
@@ -389,6 +397,7 @@ export function AppShell() {
           {overlay === 'share' && !workspace.readOnly ? <SharePanel archive={snapshot.archive} artifacts={snapshot.artifacts} /> : null}
           {overlay === 'navigation' ? <NavigationPanel reducedMotion={reduced} /> : null}
           {overlay === 'archive' && !workspace.readOnly ? <ArchiveCreatePanel onCreate={async (title, description) => { await workspace.createArchive(title, description); setOverlay(null); }} /> : null}
+          {overlay === 'case' ? <PortfolioNarrative /> : null}
         </PrimaryDrawer>
       ) : null}
       {guideOpen ? <ArchiveGuide step={guideStep} onStep={setGuideStep} onClose={() => setGuideOpen(false)} onAction={(action) => {
