@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { archiveApi } from '../api/client';
 import { archivePath, parseArchiveId, parseArtifactId } from '../routes/archive-url';
 import type { Archive, ArchiveSnapshot, Artifact, SpatialPosition } from '../schemas/archive';
+import { ensureSampleArchive, SAMPLE_ARCHIVE_TITLE } from '../demo/sampleArchive';
 
 type WorkspaceState = {
   archives: Archive[];
@@ -43,11 +44,19 @@ export function useArchiveWorkspace() {
         return;
       }
 
-      const archives = await archiveApi.listArchives();
+      let archives = await archiveApi.listArchives();
+      if (!archives.some((archive) => archive.title === SAMPLE_ARCHIVE_TITLE)) {
+        try {
+          await ensureSampleArchive(archives);
+          archives = await archiveApi.listArchives();
+        } catch {
+          // A sample is helpful but must never prevent access to a user's real archive.
+        }
+      }
       const routeArchiveId = archiveId ?? (typeof window === 'undefined' ? null : parseArchiveId(window.location.pathname));
       const targetId = routeArchiveId && archives.some((archive) => archive.id === routeArchiveId)
         ? routeArchiveId
-        : archives[0]?.id ?? null;
+        : archives.find((archive) => archive.title === SAMPLE_ARCHIVE_TITLE)?.id ?? archives[0]?.id ?? null;
       const snapshot = targetId ? await archiveApi.getSnapshot(targetId) : null;
       if (targetId && typeof window !== 'undefined' && parseArchiveId(window.location.pathname) !== targetId) {
         window.history.replaceState(null, '', archivePath(targetId, parseArtifactId(window.location.search)));

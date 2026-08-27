@@ -17,6 +17,7 @@ type SceneProps = {
   lowPower: boolean;
   active: boolean;
   lightingPreset: ExhibitionVersion['lighting_preset'];
+  focusIds?: string[];
   onContextLost?: () => void;
 };
 
@@ -129,10 +130,12 @@ function SceneContents({
   reduced,
   lowPower,
   lightingPreset,
+  focusIds = [],
 }: Omit<SceneProps, 'active' | 'onContextLost'>) {
   const controls = useRef<any>(null);
   const positionById = useMemo(() => new Map(positions.map((position) => [position.artifact_id, position])), [positions]);
   const selectedPosition = selectedId ? positionById.get(selectedId) ?? null : null;
+  const focusPositions = useMemo(() => focusIds.map((id) => positionById.get(id)).filter((position): position is SpatialPosition => Boolean(position)), [focusIds, positionById]);
 
   useEffect(() => {
     const boundary = new Box3(new Vector3(-8, -2.5, -13), new Vector3(8, 5.5, 6.5));
@@ -141,6 +144,20 @@ function SceneContents({
 
   useEffect(() => {
     if (!controls.current) return;
+    if (focusPositions.length > 1) {
+      const minX = Math.min(...focusPositions.map((position) => position.x));
+      const maxX = Math.max(...focusPositions.map((position) => position.x));
+      const minY = Math.min(...focusPositions.map((position) => position.y));
+      const maxY = Math.max(...focusPositions.map((position) => position.y));
+      const minZ = Math.min(...focusPositions.map((position) => position.z));
+      const maxZ = Math.max(...focusPositions.map((position) => position.z));
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const centerZ = (minZ + maxZ) / 2;
+      const span = Math.max(2.4, maxX - minX, maxY - minY, maxZ - minZ);
+      controls.current.setLookAt(centerX + span * .16, centerY + span * .12, centerZ + 4.2 + span * .7, centerX, centerY, centerZ, !reduced);
+      return;
+    }
     if (selectedPosition) {
       controls.current.setLookAt(
         selectedPosition.x + 0.35,
@@ -154,7 +171,7 @@ function SceneContents({
       return;
     }
     controls.current.setLookAt(0, 1.25, 9.2, 0, 0.2, -2.2, !reduced);
-  }, [reduced, selectedPosition]);
+  }, [focusPositions, reduced, selectedPosition]);
 
   const light = lightingPreset === 'dawn'
     ? { warm: '#f2cfad', cool: '#9cc6d7', ambient: 0.7 }

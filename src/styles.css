@@ -160,6 +160,36 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .archive-toolrail button span { font: 7px 'DM Mono', monospace; letter-spacing: 0.07em; }
 .has-overlay .archive-toolrail { opacity: 0; pointer-events: none; transform: translate(12px, -50%); }
 
+.archive-exploration-lenses {
+  position: absolute;
+  z-index: 14;
+  left: 28px;
+  top: 146px;
+  width: min(360px, calc(100vw - 150px));
+  display: grid;
+  gap: 8px;
+  pointer-events: none;
+}
+.archive-exploration-lenses section {
+  border: 1px solid rgba(233, 226, 216, .13);
+  background: rgba(13, 13, 17, .72);
+  backdrop-filter: blur(16px);
+  padding: 11px 12px;
+  pointer-events: auto;
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.archive-exploration-lenses section.active { border-color: rgba(228,195,156,.46); background: rgba(29,24,25,.86); transform: translateX(4px); }
+.archive-exploration-lenses section > div:first-child { display: flex; align-items: center; gap: 6px; color: #9d8d80; font: 7px 'DM Mono', monospace; letter-spacing: .08em; }
+.archive-exploration-lenses section > strong { display: block; margin-top: 7px; color: #e8dfd7; font: 500 19px/1.05 'Cormorant Garamond', serif; }
+.archive-exploration-lenses section > p { margin: 5px 0 9px; color: #85807e; font-size: 9px; line-height: 1.5; }
+.archive-exploration-lenses section > button { min-height: 30px; border: 1px solid rgba(228,195,156,.25); background: transparent; color: #baaa9a; padding: 0 9px; font: 7px 'DM Mono', monospace; cursor: pointer; }
+.archive-exploration-lenses section > button:hover:not(:disabled) { border-color: rgba(228,195,156,.58); color: #f1e2d1; }
+.archive-exploration-lenses section > button:disabled { opacity: .3; cursor: not-allowed; }
+.archive-exploration-lenses input[type='range'] { width: 100%; margin: 3px 0 4px; accent-color: #d7b994; }
+.temporal-lens-scale { display: grid !important; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px !important; margin-bottom: 8px; color: #6e6968 !important; font: 6px 'DM Mono', monospace !important; }
+.temporal-lens-scale span:last-child { text-align: right; }
+.temporal-lens-scale b { color: #c5b09c; font-size: 8px; }
+
 .curation-modes {
   position: absolute;
   z-index: 13;
@@ -685,6 +715,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .header-actions { grid-column: 2; grid-row: 1; }
   .gallery-2d-card { flex-basis: min(44vw, 380px); }
   .has-overlay .archive-timeline { left: 28px; transform: none; width: calc(100vw - 510px); }
+  .archive-exploration-lenses { width: min(320px, calc(100vw - 130px)); }
 }
 
 @media (max-width: 760px) {
@@ -698,6 +729,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .navigation-hint { top: 74px; left: 12px; right: 12px; max-width: none; min-height: 44px; border-radius: 9px; padding: 0 11px; }
   .navigation-hint span { font-size: 7px; line-height: 1.45; }
 
+  .archive-exploration-lenses { top: 126px; left: 12px; right: 12px; width: auto; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .archive-exploration-lenses section { padding: 9px; min-height: 128px; }
+  .archive-exploration-lenses section > strong { font-size: 16px; }
+  .archive-exploration-lenses section > p { font-size: 8px; max-height: 38px; overflow: hidden; }
+  .archive-exploration-lenses section > button { min-height: 34px; }
+
   .archive-toolrail {
     top: auto;
     right: 12px;
@@ -710,8 +747,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     gap: 4px;
   }
   .archive-toolrail button { min-height: 50px; }
-  .archive-toolrail button span { font-size: 6px; }
-  .has-overlay .archive-toolrail { transform: translateY(8px); }
+.archive-toolrail button span { font-size: 6px; }
+.has-overlay .archive-toolrail { transform: translateY(8px); }
 
   .curation-modes { left: 12px; top: 128px; transform: none; flex-direction: row; align-items: center; gap: 3px; padding: 3px; border: 1px solid rgba(233,226,216,.1); background: rgba(12,12,15,.72); }
   .curation-modes > span { display: none; }

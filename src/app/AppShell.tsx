@@ -1,14 +1,16 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import {
   Archive as ArchiveIcon,
   Circle,
   Compass,
   GalleryHorizontal,
+  GitBranch,
   Import,
   LayoutList,
   Layers3,
   MessageCircleQuestion,
+  Clock3,
   Play,
   Plus,
   Search,
@@ -60,6 +62,9 @@ export function AppShell() {
   const [demoBusy, setDemoBusy] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
+  const revealDeepLinkedArtifact = useRef(Boolean(new URLSearchParams(window.location.search).get('artifact')));
+  const [constellationMode, setConstellationMode] = useState(false);
+  const [temporalRevealCount, setTemporalRevealCount] = useState<number | null>(null);
 
   const lowPower = useMemo(() => {
     const device = navigator as Navigator & { deviceMemory?: number };
@@ -97,9 +102,9 @@ export function AppShell() {
   }, []);
 
   useEffect(() => {
-    if (workspace.selected && !overlay) setOverlay('artifact');
-  // Only perform deep-link reveal when the selected artifact changes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!workspace.selected || overlay || !revealDeepLinkedArtifact.current) return;
+    revealDeepLinkedArtifact.current = false;
+    setOverlay('artifact');
   }, [workspace.selected?.id]);
 
   const orderedArtifacts = useMemo(() => {
@@ -111,6 +116,28 @@ export function AppShell() {
       || Date.parse(a.created_at) - Date.parse(b.created_at)
     ));
   }, [displayPositions, snapshot]);
+
+  const temporalArtifacts = useMemo(() => {
+    if (temporalRevealCount === null) return orderedArtifacts;
+    return orderedArtifacts.slice(0, Math.max(1, Math.min(temporalRevealCount, orderedArtifacts.length)));
+  }, [orderedArtifacts, temporalRevealCount]);
+  const temporalIds = useMemo(() => new Set(temporalArtifacts.map((artifact) => artifact.id)), [temporalArtifacts]);
+  const constellationIds = useMemo(() => {
+    if (!snapshot || !workspace.selectedId) return new Set<string>();
+    const ids = new Set<string>([workspace.selectedId]);
+    for (const relationship of snapshot.relationships) {
+      if (relationship.source_artifact_id === workspace.selectedId) ids.add(relationship.target_artifact_id);
+      if (relationship.target_artifact_id === workspace.selectedId) ids.add(relationship.source_artifact_id);
+    }
+    return ids;
+  }, [snapshot, workspace.selectedId]);
+  const sceneArtifacts = useMemo(() => constellationMode && workspace.selectedId
+    ? temporalArtifacts.filter((artifact) => constellationIds.has(artifact.id))
+    : temporalArtifacts,
+  [constellationIds, constellationMode, temporalArtifacts, workspace.selectedId]);
+  const sceneIds = useMemo(() => new Set(sceneArtifacts.map((artifact) => artifact.id)), [sceneArtifacts]);
+  const sceneRelationships = useMemo(() => snapshot?.relationships.filter((relationship) => sceneIds.has(relationship.source_artifact_id) && sceneIds.has(relationship.target_artifact_id)) ?? [], [sceneIds, snapshot?.relationships]);
+  const scenePositions = useMemo(() => displayPositions.filter((position) => sceneIds.has(position.artifact_id)), [displayPositions, sceneIds]);
 
   const selectArtifact = (artifactId: string, openPanel = true) => {
     workspace.setSelectedId(artifactId);
@@ -182,6 +209,8 @@ export function AppShell() {
       ];
       const artifacts = [];
       for (const payload of artifactPayloads) artifacts.push(await archiveApi.createManualArtifact(archive.id, payload));
+      await archiveApi.updateArtifact(artifacts[2].id, { human_edit: 'The visual treatment was memorable, but I could not explain the relationship logic quickly enough. That failure changed the navigation strategy.' });
+      await archiveApi.updateArtifact(artifacts[3].id, { curator_interpretation: 'Synthetic curator note: this decision appears to preserve spatial browsing as an optional representation while keeping search and chronology as the archive source-of-truth navigation.' });
       for (let index = 0; index < artifacts.length - 1; index += 1) {
         await archiveApi.createRelationship(archive.id, { source_artifact_id: artifacts[index].id, target_artifact_id: artifacts[index + 1].id, kind: 'informed', label: index === 1 ? 'prototype response' : 'project progression', strength: 0.82 });
       }
@@ -191,10 +220,13 @@ export function AppShell() {
         positions: artifacts.map((artifact, index) => ({ artifact_id: artifact.id, x: -4.5 + index * 3, y: 0, z: index % 2 === 0 ? 0 : -1.6, rotation_y: 0, scale: 1, zone: artifactPayloads[index].project_phase, sequence: index + 1, camera_stop: true })),
       });
       await workspace.load(archive.id);
-      setGalleryMode(true);
+      setGalleryMode(!webgl);
+      workspace.setSelectedId(artifacts[2].id);
+      setConstellationMode(true);
+      setTemporalRevealCount(null);
       setGuideStep(0);
       setGuideOpen(true);
-      setOverlay('index');
+      setOverlay(null);
     } catch (error) {
       setSceneNotice(error instanceof Error ? error.message : 'Could not create guided archive.');
     } finally {
@@ -227,7 +259,7 @@ export function AppShell() {
       <main className="first-archive-shell">
         <div className="first-archive-mark"><Circle size={13} fill="currentColor" /><span>SPATIAL PROJECT ARCHIVE</span></div>
         <section>
-          <span>INSPECTABLE AI SYSTEMS · MEMORY / 04 OF 04</span>
+          <span>SPATIAL PROJECT ARCHIVE · SOURCE / MEMORY / INTERPRETATION</span>
           <h1>Preserve what happened before asking AI what it means.</h1>
           <p>Create a private archive, import real project files, preserve provenance, connect related artifacts, and optionally arrange a spatial story. Curator output stays separate from the source material it cites.</p>
           <button type="button" className="first-demo-action" onClick={() => void createGuidedDemo()} disabled={demoBusy}><Play size={15} fill="currentColor" />{demoBusy ? 'Building sample archive…' : 'Try guided sample archive'}</button>
@@ -260,15 +292,16 @@ export function AppShell() {
         <ErrorBoundary onError={() => setGalleryMode(true)}>
           <Suspense fallback={<div className="scene-loading">Preparing spatial archive…</div>}>
             <MemoryScene
-              artifacts={snapshot.artifacts}
-              positions={displayPositions}
-              relationships={snapshot.relationships}
+              artifacts={sceneArtifacts}
+              positions={scenePositions}
+              relationships={sceneRelationships}
               selectedId={workspace.selectedId}
               onSelect={(artifact) => selectArtifact(artifact.id)}
               reduced={reduced}
               lowPower={lowPower}
               active={documentVisible}
               lightingPreset={lightingPreset}
+              focusIds={constellationMode ? [...constellationIds].filter((id) => temporalIds.has(id)) : []}
               onContextLost={() => {
                 setSceneNotice('WebGL context was lost. The archive switched to the 2D gallery; your data and layout are unchanged.');
                 setGalleryMode(true);
@@ -278,8 +311,8 @@ export function AppShell() {
         </ErrorBoundary>
       ) : (
         <Gallery2D
-          artifacts={orderedArtifacts}
-          relationships={snapshot.relationships}
+          artifacts={sceneArtifacts}
+          relationships={sceneRelationships}
           selectedId={workspace.selectedId}
           onSelect={(artifact) => selectArtifact(artifact.id)}
         />
@@ -288,7 +321,7 @@ export function AppShell() {
       <header className="museum-header">
         <div className="museum-brand">
           <Circle size={12} fill="currentColor" />
-          <div><strong>PROJECT EVIDENCE ARCHIVE · MEMORY 04</strong><span>{workspace.readOnly ? 'READ-ONLY PROJECT STORY' : 'SOURCE ≠ HUMAN MEMORY ≠ AI INTERPRETATION'}</span></div>
+          <div><strong>SPATIAL PROJECT ARCHIVE</strong><span>{workspace.readOnly ? 'READ-ONLY PROJECT STORY' : 'SOURCE ≠ HUMAN MEMORY ≠ AI INTERPRETATION'}</span></div>
         </div>
         <div className="archive-switcher">
           {workspace.readOnly ? <span>{snapshot.archive.title}</span> : (
@@ -304,6 +337,7 @@ export function AppShell() {
           </button>
           <button type="button" onClick={() => { setGuideStep(0); setGuideOpen(true); }}><Compass size={14} /> Guide</button>
           <button type="button" onClick={() => setOverlay('case')}><Sparkles size={14} /> Case</button>
+          <button type="button" className={constellationMode ? 'active' : ''} disabled={!workspace.selectedId || constellationIds.size <= 1} onClick={() => setConstellationMode((current) => !current)}><GitBranch size={14} /> Constellation</button>
         </div>
       </header>
 
@@ -322,6 +356,11 @@ export function AppShell() {
           <button type="button" onClick={() => setOverlay('share')}><Share2 size={15} /><span>Share</span></button>
         </nav>
       ) : null}
+
+      {!hasPrimaryOverlay && snapshot.artifacts.length > 1 ? <aside className="archive-exploration-lenses" aria-label="Archive exploration lenses">
+        <section className={constellationMode ? 'active' : ''}><div><GitBranch size={14} /><span>KILLER INTERACTION / CONSTELLATION FOCUS</span></div><strong>{workspace.selected ? workspace.selected.title : 'Select an artifact'}</strong><p>{workspace.selectedId ? `${Math.max(0, constellationIds.size - 1)} directly related artifact${constellationIds.size - 1 === 1 ? '' : 's'} available. Focus flies the camera to this evidence neighborhood and removes unrelated material.` : 'Select an artifact to isolate its direct relationship neighborhood.'}</p><button type="button" disabled={!workspace.selectedId || constellationIds.size <= 1} onClick={() => setConstellationMode((current) => !current)}>{constellationMode ? 'Return to full archive' : 'Focus relationship neighborhood'}</button></section>
+        <section className={temporalRevealCount !== null ? 'active' : ''}><div><Clock3 size={14} /><span>KILLER INTERACTION / TEMPORAL EXCAVATION</span></div><strong>{temporalArtifacts.at(-1)?.title ?? 'Archive chronology'}</strong><p>{temporalRevealCount === null ? `All ${orderedArtifacts.length} artifacts are visible.` : `Revealing ${temporalArtifacts.length} of ${orderedArtifacts.length} artifacts through ${new Date(temporalArtifacts.at(-1)?.created_at ?? Date.now()).toLocaleDateString()}. Relationships appear only when both endpoints exist in time.`}</p><input aria-label="Temporal archive reveal" type="range" min="1" max={orderedArtifacts.length} value={temporalRevealCount ?? orderedArtifacts.length} onChange={(event) => { const count = Number(event.target.value); setTemporalRevealCount(count); setConstellationMode(false); const artifact = orderedArtifacts[Math.max(0, count - 1)]; if (artifact) workspace.setSelectedId(artifact.id); }} /><div className="temporal-lens-scale"><span>PAST</span><b>{temporalArtifacts.length}/{orderedArtifacts.length}</b><span>PRESENT</span></div>{temporalRevealCount !== null ? <button type="button" onClick={() => setTemporalRevealCount(null)}>Reveal complete archive</button> : null}</section>
+      </aside> : null}
 
       {!workspace.readOnly ? (
         <nav className="curation-modes" aria-label="Archive arrangement">
@@ -349,7 +388,13 @@ export function AppShell() {
         positions={displayPositions}
         selectedId={workspace.selectedId}
         tourActive={tourActive}
-        onSelect={(artifactId) => selectArtifact(artifactId, false)}
+        onSelect={(artifactId) => {
+          if (temporalRevealCount !== null) {
+            const targetIndex = orderedArtifacts.findIndex((artifact) => artifact.id === artifactId);
+            if (targetIndex >= temporalRevealCount) setTemporalRevealCount(targetIndex + 1);
+          }
+          selectArtifact(artifactId, false);
+        }}
         onStep={stepTimeline}
         onToggleTour={() => {
           setOverlay(null);

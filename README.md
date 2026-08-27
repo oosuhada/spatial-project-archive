@@ -6,17 +6,31 @@ Spatial Project Archive is a full-stack personal archive for importing project m
 
 ## Portfolio case study
 
-This project is **Inspectable AI Systems / 04 — Memory**. Its portfolio question is: **can AI interpret personal project history without becoming indistinguishable from the source material or the owner’s own memory?**
+Spatial Project Archive is an independent archive experiment around one question: **can AI interpret personal project history without becoming indistinguishable from the source material or the owner’s own memory?**
 
-The representative interaction now binds directly to the currently loaded persisted artifact and switches between its **source record / human-authored layer / curator interpretation** fields. Missing human or AI interpretation remains visibly missing rather than being filled with plausible text. In the real archive, source files remain intact, generated metadata and relationships remain proposals until explicit approval, and spatial presentation is only one view over the same searchable archive.
+The first visit is now sample-first instead of opening an operations-only archive. If the example does not exist, the app persists **12 synthetic project artifacts** spanning Discovery → Research → Concept → Prototype → Architecture → Build → Decision → UX → Release, plus relationship links, human notes, curator interpretations, and a saved spatial layout. Existing user archives are never replaced and remain available in the archive switcher.
 
-### Killer interaction — one persisted artifact, three explicit layers
+### Example archive — a complete project history on first visit
 
-![Persisted source record and provenance layer](docs/portfolio/01-source-layer.png)
+![Twelve-artifact example archive in the desktop spatial workspace](docs/portfolio/01-example-archive-overview.png)
 
-![Separate human-authored layer](docs/portfolio/02-human-layer.png)
+### Killer interaction — Constellation Focus
 
-![Separate curator interpretation layer](docs/portfolio/03-ai-layer.png)
+Select an artifact from the timeline, then focus its direct relationship neighborhood. The camera reframes around the connected evidence and unrelated material is removed from the scene without changing the persisted archive.
+
+![Relationship neighborhood isolated in the spatial scene](docs/portfolio/02-constellation-focus.png)
+
+### Killer interaction — Temporal Excavation
+
+The temporal lens reveals the archive incrementally from past to present. Artifacts and relationship lines only appear once both endpoints exist at the chosen point in project time.
+
+![Archive partially revealed through the temporal excavation lens](docs/portfolio/03-temporal-excavation.png)
+
+### Killer interaction — one artifact, separate source / human / AI layers
+
+The case inspector binds to the selected persisted artifact and switches among the source record, the owner's `human_edit`, and `curator_interpretation` without merging those fields into one generated story.
+
+![Persisted human interpretation shown separately from source and AI state](docs/portfolio/04-source-human-ai-layers.png)
 
 ### Architecture proof
 

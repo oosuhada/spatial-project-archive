@@ -11,13 +11,6 @@ const story = [
   ['RESULT', 'A project becomes an inspectable evidence archive rather than a decorative 3D museum or opaque AI memory.'],
 ];
 
-const series = [
-  ['01', 'Research', 'https://signals.oosu.dev/'],
-  ['02', 'Decisions', 'https://scenario.oosu.dev/'],
-  ['03', 'Generative UI', 'https://decision.oosu.dev/'],
-  ['04', 'Memory', 'https://memory.oosu.dev/'],
-] as const;
-
 type LayerKey = 'source' | 'human' | 'ai';
 
 export function PortfolioNarrative({ artifact }: { artifact?: Artifact | null }) {
@@ -47,7 +40,7 @@ export function PortfolioNarrative({ artifact }: { artifact?: Artifact | null })
 
   return (
     <section className="archive-case" aria-labelledby="archive-case-title">
-      <div className="archive-case-thesis"><span>INSPECTABLE AI SYSTEMS / 04</span><p>AI may interpret project history. It should never become indistinguishable from the source material or the owner’s own memory.</p></div>
+      <div className="archive-case-thesis"><span>SPATIAL PROJECT ARCHIVE / MEMORY INTEGRITY</span><p>AI may interpret project history. It should never become indistinguishable from the source material or the owner’s own memory.</p></div>
       <div className="archive-killer">
         <div className="archive-killer-copy"><span>KILLER INTERACTION / INSPECT THE REAL MEMORY LAYERS</span><h2 id="archive-case-title">One persisted artifact. Three explicitly different truths.</h2><p>{artifact ? `This interaction is bound to “${artifact.title}” from the currently loaded archive.` : 'No archive artifact is loaded yet; this state explains the same separation enforced by the data model.'}</p></div>
         <div className="memory-layer-demo" data-proof={artifact ? 'persisted-artifact' : 'fallback'}>
@@ -70,7 +63,6 @@ export function PortfolioNarrative({ artifact }: { artifact?: Artifact | null })
             <article className="wide view"><Search size={15} /><span>REPRESENTATIONS</span><b>Search · 2D · timeline · spatial</b><small>multiple views over one persisted archive; 3D is optional</small></article>
           </div></div>
           <div className="archive-story">{story.map(([label, body], index) => <article key={label}><span>{String(index + 1).padStart(2, '0')} / {label}</span><p>{body}</p></article>)}</div>
-          <nav className="archive-series-nav" aria-label="Inspectable AI Systems series">{series.map(([index, label, href]) => <a key={index} className={index === '04' ? 'active' : ''} href={href}><span>{index}</span><b>{label}</b></a>)}</nav>
         </div>
       </details>
     </section>
