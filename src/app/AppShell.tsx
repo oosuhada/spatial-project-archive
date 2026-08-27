@@ -367,7 +367,7 @@ export function AppShell() {
           ) : null}
           {overlay === 'import' && !workspace.readOnly ? <ImportPanel archiveId={snapshot.archive.id} onImported={async (artifact) => { await workspace.refresh(); selectArtifact(artifact.id); }} /> : null}
           {overlay === 'search' && !workspace.readOnly ? <SearchPanel archiveId={snapshot.archive.id} onOpenArtifact={(artifactId) => selectArtifact(artifactId)} /> : null}
-          {overlay === 'index' && !workspace.readOnly ? <ArchiveIndexPanel snapshot={snapshot} onOpenArtifact={(artifactId) => selectArtifact(artifactId)} onConnectArtifacts={async (sourceId, targetId, label) => { await archiveApi.createRelationship(snapshot.archive.id, { source_artifact_id: sourceId, target_artifact_id: targetId, kind: 'related', label, strength: 0.6 }); await workspace.refresh(); }} /> : null}
+          {overlay === 'index' && !workspace.readOnly ? <ArchiveIndexPanel snapshot={snapshot} onOpenArtifact={(artifactId) => selectArtifact(artifactId)} onConnectArtifacts={async (sourceId, targetId, label) => { await archiveApi.createRelationship(snapshot.archive.id, { source_artifact_id: sourceId, target_artifact_id: targetId, kind: 'related', label, strength: 0.6 }); await workspace.refresh(); }} onUpdateArtifact={async (artifactId, patch) => { await archiveApi.updateArtifact(artifactId, patch); await workspace.refresh(); }} /> : null}
           {overlay === 'curator' && !workspace.readOnly ? <CuratorPanel archiveId={snapshot.archive.id} artifacts={snapshot.artifacts} selectedArtifactId={workspace.selectedId} onOpenArtifact={(artifactId) => selectArtifact(artifactId)} /> : null}
           {overlay === 'editor' && !workspace.readOnly ? (
             <ExhibitionEditor

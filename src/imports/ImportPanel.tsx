@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FilePlus2, Link2, ShieldCheck, StickyNote, UploadCloud } from 'lucide-react';
+import { CheckCircle2, FilePlus2, Files, Link2, ShieldCheck, StickyNote, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { ApiError, archiveApi } from '../api/client';
 import type { Artifact, PrivacyState } from '../schemas/archive';
 
@@ -9,6 +9,8 @@ type Props = {
 };
 
 type ImportMode = 'file' | 'note' | 'url';
+type QueueStatus = 'queued' | 'uploading' | 'imported' | 'duplicate' | 'failed';
+type QueueItem = { id: string; file: File; status: QueueStatus; progress: number; message: string };
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -18,7 +20,7 @@ function formatBytes(bytes: number): string {
 
 export function ImportPanel({ archiveId, onImported }: Props) {
   const [mode, setMode] = useState<ImportMode>('file');
-  const [file, setFile] = useState<File | null>(null);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
   const [title, setTitle] = useState('');
   const [source, setSource] = useState('');
   const [phase, setPhase] = useState('Unsorted');
@@ -32,12 +34,13 @@ export function ImportPanel({ archiveId, onImported }: Props) {
   const [message, setMessage] = useState<string | null>(null);
 
   const fileSummary = useMemo(() => {
-    if (!file) return null;
-    return `${file.type || 'unknown type'} · ${formatBytes(file.size)}`;
-  }, [file]);
+    if (!queue.length) return null;
+    const bytes = queue.reduce((sum, item) => sum + item.file.size, 0);
+    return `${queue.length} file${queue.length === 1 ? '' : 's'} · ${formatBytes(bytes)}`;
+  }, [queue]);
 
   const reset = () => {
-    setFile(null);
+    setQueue([]);
     setTitle('');
     setSource('');
     setPhase('Unsorted');
@@ -59,25 +62,48 @@ export function ImportPanel({ archiveId, onImported }: Props) {
     setMessage(null);
     try {
       if (mode === 'file') {
-        if (!file) {
-          setMessage('Choose a file first.');
+        const pending = queue.filter((item) => item.status === 'queued' || item.status === 'failed');
+        if (!pending.length) {
+          setMessage(queue.length ? 'There are no queued files left to import.' : 'Choose one or more files first.');
           return;
         }
-        const artifact = await archiveApi.importFile(archiveId, file, {
-          title: title.trim() || file.name.replace(/\.[^.]+$/, ''),
-          source: source.trim() || file.name,
-          project_phase: phase.trim() || 'Unsorted',
-          emotion,
-          tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean),
-          people: [],
-          description,
-          provenance: provenance.trim() || `Imported from local file: ${file.name}`,
-          privacy,
-        }, setProgress);
-        await onImported(artifact);
-        setMessage('Artifact imported. Media derivatives will appear when processing finishes.');
-        setFile(null);
-        setTitle('');
+        let imported = 0;
+        let duplicates = 0;
+        let failed = 0;
+        for (const pendingItem of pending) {
+          const file = pendingItem.file;
+          setQueue((current) => current.map((item) => item.id === pendingItem.id ? { ...item, status: 'uploading', progress: 0, message: 'Hashing and uploading…' } : item));
+          try {
+            const artifact = await archiveApi.importFile(archiveId, file, {
+              title: queue.length === 1 && title.trim() ? title.trim() : file.name.replace(/\.[^.]+$/, ''),
+              source: source.trim() || file.name,
+              project_phase: phase.trim() || 'Unsorted',
+              emotion,
+              tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+              people: [],
+              description,
+              provenance: provenance.trim() || `Imported from local file: ${file.name}`,
+              privacy,
+            }, (percent) => {
+              setProgress(percent);
+              setQueue((current) => current.map((item) => item.id === pendingItem.id ? { ...item, progress: percent } : item));
+            });
+            imported += 1;
+            setQueue((current) => current.map((item) => item.id === pendingItem.id ? { ...item, status: 'imported', progress: 100, message: artifact.processing_status === 'ready' ? 'Imported' : `Imported · ${artifact.processing_status}` } : item));
+            await onImported(artifact);
+          } catch (error) {
+            if (error instanceof ApiError && error.status === 409) {
+              duplicates += 1;
+              const detail = typeof error.detail === 'object' && error.detail ? error.detail as { message?: string; title?: string } : {};
+              setQueue((current) => current.map((item) => item.id === pendingItem.id ? { ...item, status: 'duplicate', message: `${detail.message ?? 'Exact duplicate'}${detail.title ? ` · ${detail.title}` : ''}` } : item));
+            } else {
+              failed += 1;
+              const detail = error instanceof Error ? error.message : 'Import failed';
+              setQueue((current) => current.map((item) => item.id === pendingItem.id ? { ...item, status: 'failed', message: detail } : item));
+            }
+          }
+        }
+        setMessage(`${imported} imported · ${duplicates} duplicate${duplicates === 1 ? '' : 's'} skipped · ${failed} failed. Imported files stay in this inbox so you can review the batch.`);
         return;
       }
 
@@ -134,22 +160,36 @@ export function ImportPanel({ archiveId, onImported }: Props) {
       </div>
 
       {mode === 'file' ? (
-        <label className={`drop-field ${file ? 'has-file' : ''}`}>
+        <label className={`drop-field ${queue.length ? 'has-file' : ''}`}>
           <input
             type="file"
+            multiple
             accept="image/*,.pdf,.md,.markdown,.txt,audio/*,.mp4,.mov,.m4v,.webm"
             onChange={(event) => {
-              const next = event.target.files?.[0] ?? null;
-              setFile(next);
-              if (next && !title) setTitle(next.name.replace(/\.[^.]+$/, ''));
+              const nextFiles = Array.from(event.target.files ?? []);
+              setQueue((current) => [
+                ...current.filter((item) => item.status === 'imported' || item.status === 'duplicate'),
+                ...nextFiles.map((next) => ({ id: crypto.randomUUID(), file: next, status: 'queued' as const, progress: 0, message: 'Ready to import' })),
+              ]);
+              if (nextFiles.length === 1 && !title) setTitle(nextFiles[0].name.replace(/\.[^.]+$/, ''));
               setProgress(0);
+              event.currentTarget.value = '';
             }}
           />
-          <FilePlus2 size={22} />
-          <strong>{file?.name ?? 'Choose an artifact file'}</strong>
-          <span>{fileSummary ?? 'Image, PDF, Markdown, TXT, audio, or allowed local video'}</span>
+          <Files size={22} />
+          <strong>{queue.length ? 'Add more files to the import inbox' : 'Choose one or many artifact files'}</strong>
+          <span>{fileSummary ?? 'Batch import images, PDF, Markdown, TXT, audio, or allowed local video'}</span>
         </label>
       ) : null}
+
+      {mode === 'file' && queue.length ? <div className="import-inbox">
+        <div className="section-heading"><div><strong>Import inbox</strong><span>Files are uploaded individually so duplicates or failures do not block the rest of the batch.</span></div><b>{queue.filter((item) => item.status === 'queued' || item.status === 'failed').length} pending</b></div>
+        <div className="import-inbox-list">{queue.map((item) => <article key={item.id} className={`import-inbox-item ${item.status}`}>
+          <div className="import-inbox-state">{item.status === 'imported' ? <CheckCircle2 size={14} /> : item.status === 'failed' || item.status === 'duplicate' ? <XCircle size={14} /> : <FilePlus2 size={14} />}</div>
+          <div><strong>{item.file.name}</strong><span>{formatBytes(item.file.size)} · {item.status}</span><small>{item.message}</small>{item.status === 'uploading' ? <i><b style={{ width: `${item.progress}%` }} /></i> : null}</div>
+          {item.status !== 'uploading' ? <button type="button" onClick={() => setQueue((current) => current.filter((candidate) => candidate.id !== item.id))} aria-label={`Remove ${item.file.name} from import inbox`}><Trash2 size={12} /></button> : null}
+        </article>)}</div>
+      </div> : null}
 
       <label className="field">
         <span>Title</span>
@@ -213,7 +253,7 @@ export function ImportPanel({ archiveId, onImported }: Props) {
       <div className="privacy-note"><ShieldCheck size={15} /><span>Archives are private by default. Sharing only includes artifacts explicitly marked as shareable.</span></div>
       {message ? <div className="panel-message" role="status">{message}</div> : null}
       <button type="button" className="primary-action" onClick={() => void submit()} disabled={busy}>
-        {busy ? 'Importing…' : mode === 'file' ? 'Import artifact' : 'Add to archive'}
+        {busy ? 'Importing batch…' : mode === 'file' ? `Import ${queue.filter((item) => item.status === 'queued' || item.status === 'failed').length || ''} file${queue.filter((item) => item.status === 'queued' || item.status === 'failed').length === 1 ? '' : 's'}`.trim() : 'Add to archive'}
       </button>
     </div>
   );

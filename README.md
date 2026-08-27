@@ -1,5 +1,7 @@
 # Spatial Project Archive
 
+The archive now prioritizes large-scale collection operations: **batch multi-file import with a persistent import inbox**, per-file duplicate/failure handling, an archive operations dashboard, metadata suggestion review, deterministic phase/tag grouping proposals, near-duplicate review groups, chronology/event grouping, provenance cleanup queues, isolated-artifact visibility, and approve/dismiss relationship suggestions. Suggestions never rewrite source data automatically; metadata and relationships change only after an explicit human action.
+
 Spatial Project Archive is a full-stack personal archive for importing project material, preserving provenance, arranging it spatially, and reviewing a project as a sequence of connected evidence rather than a folder tree.
 
 The project began as an experimental interface called **AI Memory Museum**. The current implementation keeps the spatial exhibition mode as one way to browse the archive, while file import, metadata, provenance, search, relationship editing, versioned layouts, privacy, and export form the actual product foundation.
