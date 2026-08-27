@@ -49,38 +49,6 @@ The same persisted artifact can be switched between **Source Record**, **Human M
 
 ![Separate source, human, and AI interpretation layers](docs/portfolio/04-source-human-ai-layers.png)
 
-## Architecture & Topics / 아키텍처 및 주제
-
-### Architecture / 아키텍처
-
-```text
-Files / URLs / Notes
-  ↓
-Ingestion + SHA-256 duplicate handling
-  ↓
-MinIO object storage ── original binaries / derivatives
-  ↓
-PostgreSQL archive domain ── metadata / provenance / relationships / privacy
-  ↓
-Human notes + Curator suggestions ── separate interpretation layers
-  ↓
-Search / 2D / Timeline / Spatial representations
-```
-
-- **Frontend:** React, TypeScript, React Three Fiber, Drei, postprocessing, Motion.
-- **Backend:** FastAPI, PostgreSQL metadata, MinIO object storage, ffmpeg/Poppler derivatives.
-- **Archive domain:** artifacts, provenance, privacy, relationships, exhibition versions, spatial positions.
-- **Interpretation boundary:** source, human-authored memory, and curator/AI interpretation remain separate fields.
-
-- **프론트엔드:** React, TypeScript, React Three Fiber, Drei, postprocessing, Motion.
-- **백엔드:** FastAPI, PostgreSQL metadata, MinIO object storage, ffmpeg/Poppler derivative 처리.
-- **아카이브 도메인:** Artifact, Provenance, Privacy, Relationship, Exhibition Version, Spatial Position.
-- **해석 경계:** Source, Human-authored Memory, Curator/AI Interpretation을 서로 다른 field로 유지합니다.
-
-### Topics / 주제
-
-[`digital-archive`](https://github.com/topics/digital-archive) · [`knowledge-management`](https://github.com/topics/knowledge-management) · [`provenance`](https://github.com/topics/provenance) · [`spatial-ui`](https://github.com/topics/spatial-ui) · [`human-in-the-loop`](https://github.com/topics/human-in-the-loop) · [`react-three-fiber`](https://github.com/topics/react-three-fiber) · [`fastapi`](https://github.com/topics/fastapi) · [`postgresql`](https://github.com/topics/postgresql) · [`minio`](https://github.com/topics/minio)
-
 ## Working flow / 작업 흐름
 
 ```text
@@ -117,33 +85,13 @@ Create/open archive / Archive 생성·열기
 - Versioned exhibition layouts, undo/redo, export, privacy-aware read-only sharing, delete workflow.  
   Versioned Exhibition Layout, Undo/Redo, Export, Privacy-aware Read-only Share, Delete Workflow.
 
-## Curator and data boundary / 큐레이터 및 데이터 경계
+## Architecture & Topics / 아키텍처 및 주제
 
-The curator may interpret and connect material, but it cannot overwrite original source content. Suggestions remain separate until explicitly approved, and citation validation prevents an interpretation from appearing without addressable archive evidence.
+**Architecture / 아키텍처**  
+[`digital-archive`](https://github.com/topics/digital-archive) · [`object-storage`](https://github.com/topics/object-storage) · [`content-addressable-storage`](https://github.com/topics/content-addressable-storage) · [`metadata-management`](https://github.com/topics/metadata-management) · [`provenance`](https://github.com/topics/provenance) · [`spatial-ui`](https://github.com/topics/spatial-ui) · [`versioned-state`](https://github.com/topics/versioned-state) · [`full-stack`](https://github.com/topics/full-stack)
 
-Curator는 자료를 해석하고 연결할 수 있지만 original source content를 덮어쓸 수 없습니다. Suggestion은 명시적으로 승인되기 전까지 분리되어 있으며, Citation Validation을 통해 addressable archive evidence 없이 해석이 노출되는 것을 막습니다.
+**Project context / 프로젝트 맥락**  
+[`knowledge-management`](https://github.com/topics/knowledge-management) · [`personal-knowledge-management`](https://github.com/topics/personal-knowledge-management) · [`digital-preservation`](https://github.com/topics/digital-preservation) · [`project-history`](https://github.com/topics/project-history) · [`human-in-the-loop`](https://github.com/topics/human-in-the-loop) · [`explainable-ai`](https://github.com/topics/explainable-ai) · [`information-visualization`](https://github.com/topics/information-visualization) · [`timeline`](https://github.com/topics/timeline) · [`3d-visualization`](https://github.com/topics/3d-visualization)
 
-All bundled example artifacts are synthetic and labeled as such.
-
-기본 제공 Example Artifact는 모두 synthetic이며 그 사실을 명확히 표시합니다.
-
-## Local development / 로컬 개발
-
-```bash
-corepack pnpm install
-docker compose up -d
-corepack pnpm dev
-```
-
-Default web address / 기본 주소: `http://localhost:3104`
-
-## Project status / 프로젝트 상태
-
-This is a working personal-archive reference implementation and spatial interaction experiment. Before using it for sensitive multi-user data, authentication, organization authorization, backup policy, storage lifecycle management, and production monitoring would need additional hardening.
-
-동작하는 personal-archive reference implementation이자 spatial interaction experiment입니다. 민감한 multi-user data를 다루기 위해서는 인증, 조직 권한, backup policy, storage lifecycle, production monitoring을 추가로 강화해야 합니다.
-
-## Credits / 크레딧
-
-Third-party libraries and visual references are documented in [`CREDITS.md`](CREDITS.md) and `docs/`.  
-외부 라이브러리와 시각적 레퍼런스는 [`CREDITS.md`](CREDITS.md) 및 `docs/`에 정리되어 있습니다.
+**Implementation stack / 구현 스택**  
+[`react`](https://github.com/topics/react) · [`typescript`](https://github.com/topics/typescript) · [`react-three-fiber`](https://github.com/topics/react-three-fiber) · [`threejs`](https://github.com/topics/threejs) · [`fastapi`](https://github.com/topics/fastapi) · [`postgresql`](https://github.com/topics/postgresql) · [`minio`](https://github.com/topics/minio) · [`ffmpeg`](https://github.com/topics/ffmpeg) · [`vite`](https://github.com/topics/vite)
