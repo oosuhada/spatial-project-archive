@@ -8,9 +8,19 @@ Spatial Project Archive is a full-stack personal archive for importing project m
 
 This project is **Inspectable AI Systems / 04 — Memory**. Its portfolio question is: **can AI interpret personal project history without becoming indistinguishable from the source material or the owner’s own memory?**
 
-The representative interaction switches a synthetic artifact between **source record / human memory / AI interpretation** to make the data boundary visible. In the real archive, source files remain intact, generated metadata and relationships remain proposals until explicit approval, and spatial presentation is only one view over the same searchable archive.
+The representative interaction now binds directly to the currently loaded persisted artifact and switches between its **source record / human-authored layer / curator interpretation** fields. Missing human or AI interpretation remains visibly missing rather than being filled with plausible text. In the real archive, source files remain intact, generated metadata and relationships remain proposals until explicit approval, and spatial presentation is only one view over the same searchable archive.
 
-![Spatial Project Archive portfolio overview](docs/portfolio-overview.png)
+### Killer interaction — one persisted artifact, three explicit layers
+
+![Persisted source record and provenance layer](docs/portfolio/01-source-layer.png)
+
+![Separate human-authored layer](docs/portfolio/02-human-layer.png)
+
+![Separate curator interpretation layer](docs/portfolio/03-ai-layer.png)
+
+### Architecture proof
+
+![Archive source-of-truth and representation architecture](docs/portfolio/04-architecture.png)
 
 **Common approach:** files → embeddings → generated story.  
 **This archive:** immutable-ish source record → provenance → separate human/AI interpretation → review → search/2D/spatial representations.

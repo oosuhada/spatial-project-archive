@@ -53,6 +53,7 @@ export function AppShell() {
   const [galleryMode, setGalleryMode] = useState(() => !webgl || window.matchMedia('(max-width: 760px)').matches);
   const [mode, setMode] = useState<SortMode>('time');
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const [caseRequested] = useState(() => new URLSearchParams(window.location.search).get('case') === '1');
   const [lightingPreset, setLightingPreset] = useState<ExhibitionVersion['lighting_preset']>('nocturne');
   const [tourActive, setTourActive] = useState(false);
   const [sceneNotice, setSceneNotice] = useState<string | null>(null);
@@ -86,8 +87,8 @@ export function AppShell() {
   }, [snapshot?.version?.id, snapshot?.version?.lighting_preset]);
 
   useEffect(() => {
-    if (snapshot && new URLSearchParams(window.location.search).get('case') === '1') setOverlay('case');
-  }, [snapshot?.archive.id]);
+    if (snapshot && caseRequested) setOverlay('case');
+  }, [caseRequested, snapshot?.archive.id]);
 
   useEffect(() => {
     const onVisibility = () => setDocumentVisible(document.visibilityState !== 'hidden');
@@ -287,7 +288,7 @@ export function AppShell() {
       <header className="museum-header">
         <div className="museum-brand">
           <Circle size={12} fill="currentColor" />
-          <div><strong>PROJECT EVIDENCE ARCHIVE</strong><span>{workspace.readOnly ? 'READ-ONLY PROJECT STORY' : 'SOURCE ≠ HUMAN MEMORY ≠ AI INTERPRETATION'}</span></div>
+          <div><strong>PROJECT EVIDENCE ARCHIVE · MEMORY 04</strong><span>{workspace.readOnly ? 'READ-ONLY PROJECT STORY' : 'SOURCE ≠ HUMAN MEMORY ≠ AI INTERPRETATION'}</span></div>
         </div>
         <div className="archive-switcher">
           {workspace.readOnly ? <span>{snapshot.archive.title}</span> : (
@@ -397,7 +398,7 @@ export function AppShell() {
           {overlay === 'share' && !workspace.readOnly ? <SharePanel archive={snapshot.archive} artifacts={snapshot.artifacts} /> : null}
           {overlay === 'navigation' ? <NavigationPanel reducedMotion={reduced} /> : null}
           {overlay === 'archive' && !workspace.readOnly ? <ArchiveCreatePanel onCreate={async (title, description) => { await workspace.createArchive(title, description); setOverlay(null); }} /> : null}
-          {overlay === 'case' ? <PortfolioNarrative /> : null}
+          {overlay === 'case' ? <PortfolioNarrative artifact={workspace.selected ?? snapshot.artifacts[0] ?? null} /> : null}
         </PrimaryDrawer>
       ) : null}
       {guideOpen ? <ArchiveGuide step={guideStep} onStep={setGuideStep} onClose={() => setGuideOpen(false)} onAction={(action) => {
